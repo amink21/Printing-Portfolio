@@ -95,7 +95,7 @@ const PRODUCTS = [
     price: "$30",
     listed: '2026-09-11',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789685942/kad-prints/ct4viwhwf4oklqlohq6k.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789685943/kad-prints/mljjddqfwrbd7ecixj5f.png"],
     marketplaceUrl: "",
   },
   {
@@ -105,7 +105,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-09-10',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789685957/kad-prints/wfr5au2bfmsz41fcopwa.jpg", "https://res.cloudinary.com/uhuni38t/image/upload/v1789685959/kad-prints/vzslpakyh152sedsoker.jpg"],
     marketplaceUrl: "",
   },
   {
@@ -115,7 +115,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-09-08',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789685973/kad-prints/ynoqesqhidjmoaugclc7.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789685975/kad-prints/egri0yvbxikrggbj2tls.jpg", "https://res.cloudinary.com/uhuni38t/image/upload/v1789685976/kad-prints/zqvbvtbkswfxk2ppx3i8.jpg"],
     marketplaceUrl: "",
   },
   {
@@ -125,7 +125,7 @@ const PRODUCTS = [
     price: "$125",
     listed: '2026-09-07',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789685993/kad-prints/enueszyxuoqyvkx5fghm.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789685995/kad-prints/atoixrc6yu64xfcqizbz.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789685995/kad-prints/aj6kahsrtfljwihvinsu.png"],
     marketplaceUrl: "",
   },
   {
@@ -135,7 +135,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-09-06',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789686017/kad-prints/g4bhhb7kxrluvvsernld.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789686018/kad-prints/c9ksnokj8lrnkqba18ak.png"],
     marketplaceUrl: "",
   },
   {
@@ -146,7 +146,7 @@ const PRODUCTS = [
     listed: '2026-09-06',
     description: "",
     printHours: 2.5,
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789686051/kad-prints/onurkpiche6i6bsuy37l.jpg", "https://res.cloudinary.com/uhuni38t/image/upload/v1789686052/kad-prints/l6qixew0as4ibizye61w.png"],
     marketplaceUrl: "",
   },
   {
@@ -156,7 +156,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-09-06',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789686069/kad-prints/dmeoxshf0zkiqgu2ab1a.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789686070/kad-prints/ng5agxqlvhndhb8f3iws.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789686070/kad-prints/spqj0yxisotyhyo4egut.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789686071/kad-prints/vxp56tudl230kvzjjj3b.jpg"],
     marketplaceUrl: "",
   },
   {
@@ -166,7 +166,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-09-04',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789686088/kad-prints/t259nh3wapuawy3xgu4n.jpg", "https://res.cloudinary.com/uhuni38t/image/upload/v1789686089/kad-prints/oslsnruokerhirak3blh.jpg"],
     marketplaceUrl: "",
   },
   {
@@ -187,7 +187,7 @@ const PRODUCTS = [
     listed: '2026-09-02',
     description: "",
     printHours: 6.7,
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789686142/kad-prints/lpyxokhcd7rfz9mv6vdo.jpg", "https://res.cloudinary.com/uhuni38t/image/upload/v1789686143/kad-prints/kxgo62guu4nvofwxa3sa.jpg"],
     marketplaceUrl: "",
   },
   {
@@ -207,7 +207,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-09-02',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789686164/kad-prints/f2dbpkuhgz9tda00uggb.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789686165/kad-prints/oqvzmzx6cphfhss6gtac.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789686166/kad-prints/aeewpdzriurm28pxdxtq.png"],
     marketplaceUrl: "",
   },
   {
@@ -217,7 +217,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-09-02',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789686180/kad-prints/hx0tcgmhw0jc24q3hdqd.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789686180/kad-prints/phn1nlxxh58xzbjk01bf.jpg"],
     marketplaceUrl: "",
   },
   {
@@ -227,7 +227,7 @@ const PRODUCTS = [
     price: "$45",
     listed: '2026-09-02',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789686200/kad-prints/ar8nvmvzao0g7czeixa1.png"],
     marketplaceUrl: "",
   },
   {
@@ -237,7 +237,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-09-02',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789686212/kad-prints/rj0kdevdt3qpq6f4k7br.jpg"],
     marketplaceUrl: "",
   },
   {
@@ -247,18 +247,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-09-02',
     description: "",
-    images: [],
-    marketplaceUrl: "",
-  },
-  {
-    id: 'audi-ashtray-or-any-custom-brand',
-    name: "Audi Ashtray or any Custom brand",
-    category: 'desk',
-    price: "$15",
-    listed: '2026-09-02',
-    description: "",
-    printHours: 1,
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789686226/kad-prints/junfzmyzgi2jfksesxcv.jpg", "https://res.cloudinary.com/uhuni38t/image/upload/v1789686227/kad-prints/vng2gvz1vst7bt6wgad9.png"],
     marketplaceUrl: "",
   },
   {
@@ -289,7 +278,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-08-26',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789686272/kad-prints/mek1b5j2qqpkqftprrsq.png"],
     marketplaceUrl: "",
   },
   {
