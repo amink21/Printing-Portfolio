@@ -500,7 +500,7 @@
 
     // Rewrite only the PRODUCTS array inside the real file, so your comments,
     // the SELLER block and the category list all survive exactly as they are.
-    fetch('../products.js', { cache: 'no-store' })
+    fetch('/products.js', { cache: 'no-store' })
       .then(function (r) {
         if (!r.ok) throw new Error('could not read products.js');
         return r.text();
