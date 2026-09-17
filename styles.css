@@ -317,6 +317,42 @@ img { max-width: 100%; display: block; }
 .search input::placeholder { color: var(--muted); font-weight: 400; }
 .search input:hover { border-color: var(--line-strong); }
 
+/* ---- Sort ----------------------------------------------------------------- */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.sort { position: relative; flex-shrink: 0; }
+.sort select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  color: var(--ink-2);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  padding: 10px 34px 10px 16px;
+  cursor: pointer;
+  transition: border-color 180ms var(--ease), color 180ms var(--ease);
+}
+.sort select:hover { border-color: var(--line-strong); color: var(--ink); }
+.sort i {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 14px;
+  pointer-events: none;
+}
+
 /* ---- Grid ----------------------------------------------------------------- */
 .grid {
   display: grid;
@@ -344,6 +380,56 @@ img { max-width: 100%; display: block; }
 }
 .card.in { opacity: 1; transform: none; }
 .card.in:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); }
+
+/* Where the browser can drive an animation from scroll position, the reveal
+   runs off the main thread with no JavaScript at all. The observer in app.js
+   only takes over when this is unsupported. */
+@supports (animation-timeline: view()) {
+  .card {
+    opacity: 1;
+    transform: none;
+    animation: card-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 55%;
+  }
+  .card.in { animation: none; }
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+/* ---- Just listed flag ----------------------------------------------------- */
+.flag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding: 5px 10px;
+  border-radius: var(--radius-control);
+  box-shadow: 0 2px 8px rgba(8, 102, 255, 0.28);
+}
+
+/* ---- Loading shimmer ------------------------------------------------------
+   Covers the tile until a real photo paints, so a slow connection shows a
+   surface that is clearly loading rather than an empty hole. ----------------- */
+.card-media.loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, var(--sunken) 30%, #f4f4f6 50%, var(--sunken) 70%);
+  background-size: 220% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+@keyframes shimmer {
+  from { background-position: 180% 0; }
+  to { background-position: -80% 0; }
+}
 
 .card-media {
   position: relative;
@@ -590,6 +676,22 @@ img { max-width: 100%; display: block; }
 .sheet-note { margin: 12px 0 0; font-size: 13.5px; color: var(--ink-2); }
 .sheet-note:empty { display: none; }
 
+/* ---- View transitions ------------------------------------------------------
+   The tapped tile and the detail image share a name, so the browser morphs one
+   into the other rather than cross-fading the whole page. Browsers without this
+   simply get the dialog's own fade. ------------------------------------------ */
+.sheet-stage { view-transition-name: product-media; }
+
+::view-transition-old(product-media),
+::view-transition-new(product-media) {
+  animation-duration: 340ms;
+  animation-timing-function: var(--ease);
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 240ms;
+}
+
 /* ---- Mobile. Every multi-column layout declares its own collapse. ---------- */
 @media (max-width: 900px) {
   .sheet-inner {
@@ -602,6 +704,8 @@ img { max-width: 100%; display: block; }
 @media (max-width: 720px) {
   .filterbar-inner { flex-direction: column; align-items: stretch; gap: 10px; }
   .search { flex: 1 1 auto; }
+  .sort { width: 100%; }
+  .sort select { width: 100%; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); }
   .topnav { gap: 18px; }
   .hero-actions .btn { flex: 1 1 auto; }
@@ -617,5 +721,7 @@ img { max-width: 100%; display: block; }
   }
   .card { opacity: 1; transform: none; }
   .rise { opacity: 1; transform: none; animation: none; }
+  .card-media.loading::after { animation: none; }
+  .flag { box-shadow: none; }
   .sheet, .sheet[open] { opacity: 1; transform: none; }
 }

@@ -11,6 +11,7 @@
   var grid = document.getElementById('grid');
   var chipsEl = document.getElementById('chips');
   var searchEl = document.getElementById('search');
+  var sortEl = document.getElementById('sort');
   var countEl = document.getElementById('resultCount');
   var emptyEl = document.getElementById('empty');
   var clearBtn = document.getElementById('clearFilters');
@@ -31,7 +32,50 @@
   var products = [];
   var activeCategory = 'all';
   var query = '';
+  var sortBy = 'newest';
   var lastFocused = null;
+
+  var NEW_DAYS = 14;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function reduced() { return reduce.matches; }
+
+  // View Transitions where the browser has them, a plain call where it does not.
+  // Every caller works either way, so nothing is gated on support.
+  var transitioning = false;
+  function withTransition(fn) {
+    if (
+      reduced() ||
+      !document.startViewTransition ||
+      transitioning ||
+      document.visibilityState !== 'visible'
+    ) {
+      fn();
+      return;
+    }
+
+    transitioning = true;
+    var vt;
+    try {
+      vt = document.startViewTransition(fn);
+    } catch (err) {
+      // Some states refuse a transition outright. The update still has to run.
+      transitioning = false;
+      fn();
+      return;
+    }
+
+    // An aborted transition rejects these. That is a normal outcome, not a
+    // failure worth reporting, but an uncaught rejection would surface as an
+    // error in the console.
+    var done = function () { transitioning = false; };
+    if (vt && vt.finished && vt.finished.then) vt.finished.then(done, done);
+    else transitioning = false;
+    if (vt && vt.ready && vt.ready.then) vt.ready.then(null, function () {});
+    if (vt && vt.updateCallbackDone && vt.updateCallbackDone.then) {
+      vt.updateCallbackDone.then(null, function () {});
+    }
+  }
 
   // One source of truth for every outbound link. Falls back to Marketplace
   // search so a blank config never produces a dead button.
@@ -56,6 +100,13 @@
     return id;
   }
 
+  function byId(id) {
+    for (var i = 0; i < products.length; i++) {
+      if (products[i].id === id) return products[i];
+    }
+    return null;
+  }
+
   // Stable per product, so a given item always draws the same placeholder.
   function hash(str) {
     var h = 2166136261;
@@ -75,10 +126,20 @@
     return (words[0][0] + words[1][0]).toUpperCase();
   }
 
+  function priceNumber(p) {
+    var n = parseFloat(String(p.price || '').replace(/[^0-9.]/g, ''));
+    return isNaN(n) ? 0 : n;
+  }
+
+  function isNew(p) {
+    if (!p.listed) return false;
+    var then = new Date(p.listed + 'T00:00:00Z').getTime();
+    if (isNaN(then)) return false;
+    return (Date.now() - then) / 86400000 <= NEW_DAYS;
+  }
+
   // The placeholder for a product whose photo has not arrived. Light, quiet, and
-  // composed so it reads as a shot still to come rather than a broken image. The
-  // tint shifts a little per product so a screen of them is not one flat block,
-  // staying inside the accent's own blue rather than introducing new colour.
+  // composed so it reads as a shot still to come rather than a broken image.
   function placeholderMarkup(product) {
     var h = hash(product.id || product.name);
     var shift = (h % 22) - 11;
@@ -108,11 +169,17 @@
 
   function visible() {
     var q = query.trim().toLowerCase();
-    return products.filter(function (p) {
+    var list = products.filter(function (p) {
       if (activeCategory !== 'all' && p.category !== activeCategory) return false;
       if (!q) return true;
       return (p.name + ' ' + (p.description || '')).toLowerCase().indexOf(q) !== -1;
     });
+
+    if (sortBy === 'price-asc') list.sort(function (a, b) { return priceNumber(a) - priceNumber(b); });
+    else if (sortBy === 'price-desc') list.sort(function (a, b) { return priceNumber(b) - priceNumber(a); });
+    else list.sort(function (a, b) { return String(b.listed || '').localeCompare(String(a.listed || '')); });
+
+    return list;
   }
 
   function renderChips() {
@@ -124,9 +191,7 @@
     var list = [{ id: 'all', label: 'Everything' }].concat(
       // A category nobody has products in yet is not shown, so the filter row
       // never offers a dead end.
-      CATEGORIES.filter(function (c) {
-        return counts[c.id];
-      })
+      CATEGORIES.filter(function (c) { return counts[c.id]; })
     );
 
     chipsEl.innerHTML = list
@@ -139,6 +204,30 @@
         );
       })
       .join('');
+  }
+
+  function cardMarkup(p) {
+    var img = firstImage(p);
+    var media = img
+      ? '<img src="' + esc(img) + '" alt="' + esc(p.name) + '" loading="lazy" decoding="async">'
+      : placeholderMarkup(p);
+
+    var sub = [];
+    if (p.printHours) sub.push(p.printHours + ' h print');
+    sub.push(categoryLabel(p.category));
+
+    return (
+      '<button type="button" class="card" data-id="' + esc(p.id) + '">' +
+      '<span class="card-media' + (img ? ' loading' : '') + '">' + media +
+      (isNew(p) ? '<span class="flag">Just listed</span>' : '') +
+      '</span>' +
+      '<span class="card-body">' +
+      '<span class="card-price">' + esc(p.price) + '</span>' +
+      '<span class="card-name">' + esc(p.name) + '</span>' +
+      '<span class="card-sub">' + esc(sub.join(' · ')) + '</span>' +
+      '</span>' +
+      '</button>'
+    );
   }
 
   function renderGrid() {
@@ -156,39 +245,70 @@
     }
     emptyEl.hidden = true;
 
-    grid.innerHTML = list
-      .map(function (p) {
-        var img = firstImage(p);
-        var media = img
-          ? '<img src="' + esc(img) + '" alt="' + esc(p.name) + '" loading="lazy" decoding="async">'
-          : placeholderMarkup(p);
-
-        var sub = [];
-        if (p.printHours) sub.push(p.printHours + ' h print');
-        sub.push(categoryLabel(p.category));
-
-        return (
-          '<button type="button" class="card" data-id="' + esc(p.id) + '">' +
-          '<span class="card-media">' + media + '</span>' +
-          '<span class="card-body">' +
-          '<span class="card-price">' + esc(p.price) + '</span>' +
-          '<span class="card-name">' + esc(p.name) + '</span>' +
-          '<span class="card-sub">' + esc(sub.join(' · ')) + '</span>' +
-          '</span>' +
-          '</button>'
-        );
-      })
-      .join('');
-
+    grid.innerHTML = list.map(cardMarkup).join('');
+    watchImages();
     reveal();
   }
 
-  // Scroll reveal via IntersectionObserver rather than a scroll listener, which
-  // would run on every frame and stutter on a phone.
+  // Cards that survive a filter change slide to their new position instead of
+  // being torn down and rebuilt. Measure before, measure after, play the
+  // difference backwards. Works in every browser, unlike a view transition.
+  function renderGridFlip() {
+    if (reduced()) { renderGrid(); return; }
+
+    var before = {};
+    grid.querySelectorAll('.card').forEach(function (c) {
+      before[c.dataset.id] = c.getBoundingClientRect();
+    });
+
+    renderGrid();
+
+    grid.querySelectorAll('.card').forEach(function (c) {
+      var was = before[c.dataset.id];
+      if (!was) return; // new to this view, let it fade in normally
+      var now = c.getBoundingClientRect();
+      var dx = was.left - now.left;
+      var dy = was.top - now.top;
+      c.classList.add('in'); // it was already on screen, do not re-fade it
+      if (!dx && !dy) return;
+      c.style.transition = 'none';
+      c.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+      requestAnimationFrame(function () {
+        c.style.transition = '';
+        c.style.transform = '';
+      });
+    });
+  }
+
+  // Real photos get a shimmer until they paint, so a slow connection shows a
+  // loading surface rather than an empty hole.
+  function watchImages() {
+    grid.querySelectorAll('.card-media.loading img').forEach(function (img) {
+      if (img.complete) {
+        img.parentNode.classList.remove('loading');
+        return;
+      }
+      img.addEventListener('load', function () {
+        img.parentNode.classList.remove('loading');
+      }, { once: true });
+      img.addEventListener('error', function () {
+        img.parentNode.classList.remove('loading');
+      }, { once: true });
+    });
+  }
+
+  // Where the browser supports scroll-driven CSS animation the reveal is done
+  // entirely in the stylesheet, off the main thread. This observer is the
+  // fallback for everything else.
+  var cssScrollDriven =
+    window.CSS && CSS.supports && CSS.supports('animation-timeline', 'view()');
   var observer = null;
   var revealFallback = null;
+
   function reveal() {
-    var cards = grid.querySelectorAll('.card');
+    if (cssScrollDriven || reduced()) return;
+
+    var cards = grid.querySelectorAll('.card:not(.in)');
     if (!('IntersectionObserver' in window)) {
       cards.forEach(function (c) { c.classList.add('in'); });
       return;
@@ -211,9 +331,8 @@
       observer.observe(c);
     });
 
-    // Safety net. A card that never intersects (anchor jump, odd viewport, an
-    // observer that misfires) would otherwise sit at opacity 0 forever. Nothing
-    // in this grid is ever allowed to stay invisible.
+    // Safety net. A card that never intersects would otherwise sit at opacity 0
+    // forever. Nothing in this grid is ever allowed to stay invisible.
     clearTimeout(revealFallback);
     revealFallback = setTimeout(function () {
       grid.querySelectorAll('.card:not(.in)').forEach(function (c) {
@@ -227,6 +346,7 @@
 
   var current = null;
   var currentIndex = 0;
+  var suppressHash = false;
 
   function showImage(index) {
     if (!current) return;
@@ -242,17 +362,15 @@
     });
   }
 
-  function openDetail(product) {
+  function fillDetail(product) {
     current = product;
-    lastFocused = document.activeElement;
 
     dCat.textContent = categoryLabel(product.category);
     dName.textContent = product.name;
     dPrice.textContent = product.price || '';
     dDesc.textContent = product.description || '';
 
-    // Each spec is one cell holding a stacked label and value. A bare dt/dd
-    // sequence in a 2-column grid lands label-left value-right instead.
+    // Each spec is one cell holding a stacked label and value.
     var specs = '';
     if (product.printHours) {
       specs += '<div class="spec"><dt>Print time</dt><dd>' + esc(product.printHours) + ' hours</dd></div>';
@@ -263,21 +381,18 @@
     var imgs = product.images || [];
     dThumbs.innerHTML =
       imgs.length > 1
-        ? imgs
-            .map(function (src, i) {
-              return (
-                '<button type="button" class="thumb" data-i="' + i + '"' +
-                ' aria-current="' + (i === 0) + '"' +
-                ' aria-label="Photo ' + (i + 1) + '">' +
-                '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async"></button>'
-              );
-            })
-            .join('')
+        ? imgs.map(function (src, i) {
+            return (
+              '<button type="button" class="thumb" data-i="' + i + '"' +
+              ' aria-current="' + (i === 0) + '"' +
+              ' aria-label="Photo ' + (i + 1) + '">' +
+              '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async"></button>'
+            );
+          }).join('')
         : '';
 
     showImage(0);
 
-    // No live listing means no button, rather than a link that goes nowhere.
     var notes = [];
     if (!imgs.length) notes.push('Photos of this one are coming.');
 
@@ -286,8 +401,8 @@
       dCta.hidden = false;
       dAlt.hidden = true;
     } else {
-      // No per-product link recorded. That does not mean the piece is unlisted, so
-      // send them to the profile rather than claiming it is unavailable.
+      // No per-product link recorded. That does not mean the piece is unlisted,
+      // so send them to the profile rather than claiming it is unavailable.
       dCta.hidden = true;
       dAlt.href = sellerUrl();
       dAlt.hidden = false;
@@ -298,17 +413,40 @@
       );
     }
     dNote.textContent = notes.join(' ');
+  }
 
-    if (typeof dialog.showModal === 'function') {
-      dialog.showModal();
-    } else {
-      dialog.setAttribute('open', '');
+  function openDetail(product, pushHistory) {
+    lastFocused = document.activeElement;
+
+    // Name the tapped tile and the detail stage the same thing, and the browser
+    // morphs one into the other instead of cross-fading the whole page.
+    var sourceMedia = grid.querySelector('.card[data-id="' + product.id + '"] .card-media');
+    if (sourceMedia) sourceMedia.style.viewTransitionName = 'product-media';
+
+    withTransition(function () {
+      fillDetail(product);
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', '');
+    });
+
+    // The name has to be released, or the next open finds two elements claiming it.
+    setTimeout(function () {
+      if (sourceMedia) sourceMedia.style.viewTransitionName = '';
+    }, 600);
+
+    if (pushHistory !== false) {
+      suppressHash = true;
+      history.pushState({ product: product.id }, '', '#' + product.id);
+      suppressHash = false;
     }
   }
 
-  function closeDetail() {
-    if (typeof dialog.close === 'function') dialog.close();
-    else dialog.removeAttribute('open');
+  function closeDetail(popHistory) {
+    withTransition(function () {
+      if (typeof dialog.close === 'function') dialog.close();
+      else dialog.removeAttribute('open');
+    });
+    if (popHistory !== false && location.hash) history.back();
   }
 
   /* -- events ------------------------------------------------------------- */
@@ -318,28 +456,33 @@
     if (!chip) return;
     activeCategory = chip.dataset.cat;
     renderChips();
-    renderGrid();
+    renderGridFlip();
   });
 
   searchEl.addEventListener('input', function (e) {
     query = e.target.value;
-    renderGrid();
+    renderGridFlip();
   });
+
+  if (sortEl) {
+    sortEl.addEventListener('change', function (e) {
+      sortBy = e.target.value;
+      renderGridFlip();
+    });
+  }
 
   clearBtn.addEventListener('click', function () {
     activeCategory = 'all';
     query = '';
     searchEl.value = '';
     renderChips();
-    renderGrid();
+    renderGridFlip();
   });
 
   grid.addEventListener('click', function (e) {
     var card = e.target.closest('.card');
     if (!card) return;
-    var product = products.filter(function (p) {
-      return p.id === card.dataset.id;
-    })[0];
+    var product = byId(card.dataset.id);
     if (product) openDetail(product);
   });
 
@@ -348,12 +491,20 @@
     if (thumb) showImage(Number(thumb.dataset.i));
   });
 
-  dClose.addEventListener('click', closeDetail);
+  dClose.addEventListener('click', function () { closeDetail(); });
 
-  // Clicking the backdrop closes. The dialog element itself fills the viewport,
-  // so a click that lands on it rather than on its inner panel is a backdrop hit.
+  // Clicking the backdrop closes. The dialog element fills the viewport, so a
+  // click landing on it rather than on its inner panel is a backdrop hit.
   dialog.addEventListener('click', function (e) {
     if (e.target === dialog) closeDetail();
+  });
+
+  // Escape closes the dialog natively, which fires this without going through
+  // closeDetail, so the history entry has to be dropped here too.
+  dialog.addEventListener('cancel', function () {
+    if (location.hash) {
+      setTimeout(function () { history.back(); }, 0);
+    }
   });
 
   dialog.addEventListener('close', function () {
@@ -368,6 +519,36 @@
     if (imgs.length < 2) return;
     if (e.key === 'ArrowRight') showImage((currentIndex + 1) % imgs.length);
     if (e.key === 'ArrowLeft') showImage((currentIndex - 1 + imgs.length) % imgs.length);
+  });
+
+  // Swipe between photos on a phone, where there is no keyboard and the thumbs
+  // are small.
+  var touchX = null;
+  dStage.addEventListener('touchstart', function (e) {
+    touchX = e.changedTouches[0].clientX;
+  }, { passive: true });
+  dStage.addEventListener('touchend', function (e) {
+    if (touchX === null || !current) return;
+    var imgs = current.images || [];
+    var dx = e.changedTouches[0].clientX - touchX;
+    touchX = null;
+    if (imgs.length < 2 || Math.abs(dx) < 45) return;
+    showImage(dx < 0 ? (currentIndex + 1) % imgs.length
+                     : (currentIndex - 1 + imgs.length) % imgs.length);
+  }, { passive: true });
+
+  // Every product has its own address, so one piece can be sent into a chat and
+  // the back button behaves the way people expect.
+  window.addEventListener('popstate', function () {
+    if (suppressHash) return;
+    var id = location.hash.replace('#', '');
+    var product = id ? byId(id) : null;
+    if (product) {
+      if (dialog.open) fillDetail(product);
+      else openDetail(product, false);
+    } else if (dialog.open) {
+      closeDetail(false);
+    }
   });
 
   /* -- data --------------------------------------------------------------- */
@@ -412,6 +593,7 @@
         name: o.name || 'Untitled',
         category: o.category || 'custom',
         price: o.price || '',
+        listed: o.listed || '',
         description: o.description || '',
         printHours: o.printHours ? Number(o.printHours) : null,
         images: o.images
@@ -426,6 +608,11 @@
     products = list;
     renderChips();
     renderGrid();
+
+    // Arriving on a product link opens straight to it.
+    var id = location.hash.replace('#', '');
+    var product = id ? byId(id) : null;
+    if (product) openDetail(product, false);
   }
 
   // Outbound links, all from the one config block in products.js.
@@ -440,9 +627,8 @@
     contactLabel.textContent = 'See all my listings';
   }
 
-  // The header lifts off the page once the top of the document leaves view.
-  // A sentinel plus an observer, rather than a scroll handler that would run on
-  // every frame.
+  // The header lifts off the page once the top of the document leaves view. A
+  // sentinel plus an observer, rather than a scroll handler on every frame.
   var sentinel = document.getElementById('scrollSentinel');
   var topbar = document.querySelector('.topbar');
   if (sentinel && topbar && 'IntersectionObserver' in window) {
@@ -462,9 +648,7 @@
         // An empty or broken sheet must not blank the site.
         start(live.length ? live : PRODUCTS);
       })
-      .catch(function () {
-        start(PRODUCTS);
-      });
+      .catch(function () { start(PRODUCTS); });
   } else {
     start(PRODUCTS);
   }
