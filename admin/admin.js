@@ -72,6 +72,13 @@
       }
     }
 
+    function fail(message) {
+      btn.disabled = false;
+      err.textContent = message;
+      err.hidden = false;
+      document.getElementById('gatePass').value = '';
+    }
+
     // Ask the server first. It holds the real password; nothing in this page does.
     fetch('/api/save', {
       method: 'POST',
@@ -79,23 +86,40 @@
       body: JSON.stringify({ action: 'check', password: value }),
     })
       .then(function (r) {
-        if (r.status === 404 || r.status === 405) throw new Error('no-api');
-        return r.json().then(function (b) { return { ok: r.ok, b: b }; });
+        // 404 or 405 means there is genuinely no function here, which is the
+        // local case. Anything else is a real answer and must not be mistaken
+        // for a bad password.
+        if (r.status === 404 || r.status === 405) return { noApi: true };
+        return r.text().then(function (text) {
+          var parsed = null;
+          try { parsed = JSON.parse(text); } catch (e2) {}
+          return { ok: r.ok, status: r.status, body: parsed, raw: text };
+        });
       })
       .then(function (res) {
+        if (res.noApi) return localCheck();
         btn.disabled = false;
-        if (!res.ok) {
-          err.textContent = res.b.error || 'Wrong password.';
-          err.hidden = false;
-          document.getElementById('gatePass').value = '';
-          return;
+
+        if (!res.body) {
+          // The function is there but did not answer with JSON, so it crashed or
+          // is misconfigured. Saying "wrong password" here would send you hunting
+          // for the wrong problem.
+          return fail(
+            'The save function answered with HTTP ' + res.status + ' and not JSON. ' +
+            'It is deployed but failing. Check the Vercel function logs.'
+          );
         }
+        if (!res.ok) return fail(res.body.error || 'Wrong password.');
+
         serverMode = true;
         password = value;
         try { sessionStorage.setItem('kadprints.admin.pw', value); } catch (e2) {}
         unlock();
       })
-      .catch(localCheck);
+      .catch(function () {
+        // A genuine network failure. Offline, or no server at all.
+        localCheck();
+      });
   });
 
   try {
