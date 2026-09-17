@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kad Prints - 3D printed car key holders, desk pieces and sculptures</title>
+<meta name="description" content="Car key holders, caliper pencil holders and layered sculptures, printed to order in Montreal. Browse the catalog, then buy through Facebook Marketplace.">
+<meta name="theme-color" content="#f5f5f7">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Kad Prints">
+<meta property="og:description" content="Car key holders, desk pieces and sculptures, printed to order in Montreal.">
+
+<link rel="stylesheet" href="styles.css">
+
+<!-- Phosphor icons, loaded without blocking render. The page is readable before
+     they arrive and every icon carries a label or aria-label. -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css"></noscript>
+</head>
+<body>
+
+<a class="skip" href="#catalog">Skip to the catalog</a>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="#top"><b>Kad</b><span>Prints</span></a>
+    <nav class="topnav" aria-label="Main">
+      <a href="#catalog">Catalog</a>
+      <a href="#contact">Custom work</a>
+      <a id="navListings" href="https://www.facebook.com/marketplace/" target="_blank" rel="noopener noreferrer">Listings</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <span id="scrollSentinel" aria-hidden="true"></span>
+
+  <!-- HERO. Centred: the brief names Apple product pages and that is the shape
+       they take, one statement with room around it. -->
+  <section class="hero">
+    <div class="wrap">
+      <h1 class="rise" style="--d:0ms">Made one at a time.</h1>
+      <p class="hero-sub rise" style="--d:70ms">
+        Car key holders, caliper pencil holders and layered sculptures, printed to order in Montreal.
+      </p>
+      <div class="hero-actions rise" style="--d:140ms">
+        <a class="btn btn-primary" href="#catalog">Browse the catalog</a>
+        <a class="btn btn-ghost" href="#contact">Ask for something custom</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATALOG -->
+  <section id="catalog" class="catalog">
+    <div class="wrap">
+      <div class="catalog-head">
+        <h2>Everything I make</h2>
+        <p class="count" id="resultCount" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <div class="filterbar">
+      <div class="wrap filterbar-inner">
+        <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
+        <div class="search">
+          <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+          <input
+            type="search"
+            id="search"
+            placeholder="Search by name"
+            aria-label="Search products by name"
+            autocomplete="off">
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <noscript>
+        <p class="noscript">
+          The catalog needs JavaScript switched on. Everything is also on Facebook
+          Marketplace if you would rather browse there.
+        </p>
+      </noscript>
+      <div class="grid" id="grid"></div>
+      <div class="empty" id="empty" hidden>
+        <p class="empty-title">Nothing matches that.</p>
+        <p class="empty-body">Try a different category, or clear the search box.</p>
+        <button class="btn btn-ghost" id="clearFilters" type="button">Show everything</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT. Short on purpose: the buying happens on Marketplace. -->
+  <section id="contact" class="contact">
+    <div class="wrap contact-inner">
+      <h2>Want something that is not here?</h2>
+      <p>
+        Most of these started as a request. Send the car, the colour and roughly what you
+        want it to do, and you will get a price back.
+      </p>
+      <a class="btn btn-primary" id="contactCta" href="https://www.facebook.com/marketplace/" target="_blank" rel="noopener noreferrer">
+        <span id="contactCtaLabel">Message on Marketplace</span>
+        <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <span>Kad Prints, Montreal</span>
+    <a id="footListings" href="https://www.facebook.com/marketplace/" target="_blank" rel="noopener noreferrer">
+      See all my listings on Marketplace
+    </a>
+  </div>
+</footer>
+
+<!-- PRODUCT DETAIL. Native dialog: focus trapping and Escape come free. -->
+<dialog class="sheet" id="detail" aria-labelledby="detailName">
+  <div class="sheet-inner">
+    <button class="sheet-close" id="detailClose" type="button" aria-label="Close">
+      <i class="ph ph-x" aria-hidden="true"></i>
+    </button>
+
+    <div class="sheet-media">
+      <div class="sheet-stage" id="detailStage"></div>
+      <div class="sheet-thumbs" id="detailThumbs"></div>
+    </div>
+
+    <div class="sheet-body">
+      <p class="sheet-cat" id="detailCat"></p>
+      <h3 id="detailName"></h3>
+      <p class="sheet-price" id="detailPrice"></p>
+      <p class="sheet-desc" id="detailDesc"></p>
+      <dl class="sheet-specs" id="detailSpecs"></dl>
+      <a class="btn btn-primary sheet-cta" id="detailCta" target="_blank" rel="noopener noreferrer">
+        View on Marketplace
+        <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
+      </a>
+      <a class="btn btn-ghost sheet-alt" id="detailAlt" target="_blank" rel="noopener noreferrer" hidden>
+        See my other listings
+        <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
+      </a>
+      <p class="sheet-note" id="detailNote"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="products.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
