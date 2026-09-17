@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kad Prints - Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f5f5f7">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="admin.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" media="print" onload="this.media='all'">
+</head>
+<body class="admin">
+
+<!-- GATE ------------------------------------------------------------------ -->
+<div class="gate" id="gate">
+  <form class="gate-card" id="gateForm">
+    <h1>Kad Prints</h1>
+    <p class="gate-sub">Catalog editor</p>
+    <input type="password" id="gatePass" placeholder="Password" aria-label="Password" autocomplete="current-password">
+    <p class="gate-err" id="gateErr" hidden>Wrong password.</p>
+    <button class="btn btn-primary" type="submit">Open editor</button>
+  </form>
+</div>
+
+<!-- EDITOR ---------------------------------------------------------------- -->
+<div class="app" id="app" hidden>
+
+  <header class="abar">
+    <div class="abar-in">
+      <a class="brand" href="../"><b>Kad</b><span>Prints</span></a>
+      <span class="tag">Editor</span>
+      <span class="spacer"></span>
+      <span class="dirty" id="dirty" hidden>Unsaved changes</span>
+      <button class="btn btn-ghost" id="addBtn" type="button">
+        <i class="ph ph-plus" aria-hidden="true"></i> Add product
+      </button>
+      <button class="btn btn-primary" id="saveBtn" type="button">
+        <i class="ph ph-download-simple" aria-hidden="true"></i> Download products.js
+      </button>
+    </div>
+  </header>
+
+  <p class="live" id="liveNote" hidden>
+    Saving publishes straight to the live site. It commits the change for you, so
+    there is nothing to download and nothing to do in GitHub.
+  </p>
+
+  <div class="steps" id="steps">
+    <div class="step">
+      <span class="num">1</span>
+      <p>Edit anything below. Nothing here touches the live site yet, so you cannot break it.</p>
+    </div>
+    <div class="step">
+      <span class="num">2</span>
+      <p>Click <b>Download products.js</b>. Your browser saves the new file.</p>
+    </div>
+    <div class="step">
+      <span class="num">3</span>
+      <p>Drop that file into GitHub, replacing the old <code>products.js</code>, and commit. The site updates itself.</p>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search">
+      <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+      <input type="search" id="afilter" placeholder="Filter by name" aria-label="Filter products">
+    </div>
+    <span class="acount" id="acount"></span>
+    <button class="btn btn-ghost small" id="revertBtn" type="button">Discard my changes</button>
+  </div>
+
+  <p class="warn" id="warn" hidden></p>
+
+  <div class="rows" id="rows"></div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="../products.js"></script>
+<script src="config.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
