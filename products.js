@@ -268,7 +268,7 @@ const PRODUCTS = [
     listed: '2026-08-26',
     description: "",
     printHours: 7,
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789689586/kad-prints/nadj9ig1l6ksnby08id7.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789689587/kad-prints/nm9xufh566snfigdxzza.png"],
     marketplaceUrl: "",
   },
   {
@@ -289,7 +289,7 @@ const PRODUCTS = [
     listed: '2026-08-24',
     description: "",
     printHours: 20,
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789689607/kad-prints/i49komjivj3me5qncjr0.jpg"],
     marketplaceUrl: "",
   },
   {
@@ -299,7 +299,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-08-24',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789689630/kad-prints/vcpmswhnjwsmrjfbj0qj.jpg", "https://res.cloudinary.com/uhuni38t/image/upload/v1789689631/kad-prints/ad2r8hxemjx55ldpogkp.jpg"],
     marketplaceUrl: "",
   },
   {
@@ -309,7 +309,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-08-24',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789689658/kad-prints/twxhanp3ec13ppk0hl56.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789689658/kad-prints/e9fff2a0mxn9vljatryp.png"],
     marketplaceUrl: "",
   },
   {
@@ -319,7 +319,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-08-24',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789689675/kad-prints/piwzsdpjv48i1zwlkcf2.png"],
     marketplaceUrl: "",
   },
   {
@@ -329,7 +329,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-08-24',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789689697/kad-prints/tmrfesvcwyy4lsnrlcqa.png"],
     marketplaceUrl: "",
   },
   {
@@ -339,7 +339,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-08-24',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789689708/kad-prints/g4rghu9bnpnfzqr2fso0.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789689709/kad-prints/yetstloarx9ybcn8eitg.jpg"],
     marketplaceUrl: "",
   },
   {
@@ -349,7 +349,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-08-24',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789689728/kad-prints/asvgxvxbwm6auqpqhcdn.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789689729/kad-prints/cnw9soesdjaops2ofb0m.png"],
     marketplaceUrl: "",
   },
   {
@@ -359,7 +359,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-08-24',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789689752/kad-prints/zfdluusjum0yd12rmsrm.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789689753/kad-prints/rky6yunz8evwbr2nr27k.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789689754/kad-prints/goiw19g2voo6inihp407.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789689755/kad-prints/hqxtco10men9l6unp59r.png"],
     marketplaceUrl: "",
   },
   {
@@ -370,7 +370,7 @@ const PRODUCTS = [
     listed: '2026-08-24',
     description: "",
     printHours: 10,
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789689795/kad-prints/sc4li8fx2ymlapseradb.jpg", "https://res.cloudinary.com/uhuni38t/image/upload/v1789689796/kad-prints/oax6pzcdgj71c0ygv9rb.png"],
     marketplaceUrl: "",
   },
   {
@@ -380,7 +380,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-08-24',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789689821/kad-prints/nlvn9ytcmgatkrsgymlv.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789689822/kad-prints/tdo6vw8sp9k4ebhqjv8y.jpg"],
     marketplaceUrl: "",
   },
   {
@@ -390,7 +390,7 @@ const PRODUCTS = [
     price: "$40",
     listed: '2026-08-24',
     description: "",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1789689841/kad-prints/sszo5pqnrovakxwylk1i.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1789689842/kad-prints/zwkdojmnhxlpcjydursj.png"],
     marketplaceUrl: "",
   },
   {
@@ -399,16 +399,6 @@ const PRODUCTS = [
     category: 'key-holders',
     price: "$30",
     listed: '2026-08-24',
-    description: "",
-    images: [],
-    marketplaceUrl: "",
-  },
-  {
-    id: 'batman-layered-sculpture',
-    name: "Batman Layered Sculpture",
-    category: 'art',
-    price: "$20",
-    listed: '2026-08-06',
     description: "",
     images: [],
     marketplaceUrl: "",
@@ -490,17 +480,6 @@ const PRODUCTS = [
     price: "$30",
     listed: '2026-06-18',
     description: "",
-    images: [],
-    marketplaceUrl: "",
-  },
-  {
-    id: 'porsche-spoiler-shelf',
-    name: "Porsche spoiler shelf",
-    category: 'desk',
-    price: "$150",
-    listed: '2026-06-18',
-    description: "",
-    printHours: 2.5,
     images: [],
     marketplaceUrl: "",
   },
