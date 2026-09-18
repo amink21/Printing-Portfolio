@@ -38,6 +38,7 @@
     gate.hidden = true;
     app.hidden = false;
     applyMode();
+    paintNudge();
     load();
   }
 
@@ -186,6 +187,7 @@
 
   function validate() {
     var problems = [];
+    var notes = [];
     var ids = {};
     items.forEach(function (p) {
       if (!p.id) problems.push('A product has no id.');
@@ -193,12 +195,26 @@
       ids[p.id] = true;
       if (!p.name) problems.push('A product has no name.');
     });
-    if (problems.length) {
+
+    // Not a problem, just something to finish. An imported listing arrives with
+    // no price because the export does not carry one, and it would be wrong to
+    // block publishing the other sixty-five over it.
+    var unpriced = items.filter(function (p) { return !String(p.price || '').trim(); }).length;
+    if (unpriced) {
+      notes.push(
+        unpriced + (unpriced === 1 ? ' product has' : ' products have') + ' no price yet, ' +
+        'and will show without one.'
+      );
+    }
+
+    var all = problems.concat(notes);
+    if (all.length) {
       warnEl.hidden = false;
-      warnEl.textContent = problems.slice(0, 4).join(' ');
+      warnEl.textContent = all.slice(0, 4).join(' ');
     } else {
       warnEl.hidden = true;
     }
+    warnEl.classList.toggle('soft', problems.length === 0);
     return problems.length === 0;
   }
 
@@ -961,8 +977,451 @@
     ['dragover', 'drop'].forEach(function (evt) {
       window.addEventListener(evt, function (e) {
         if (dropEl.contains(e.target)) return;
+        if (impDrop && impDrop.contains(e.target)) return;
         e.preventDefault();
       });
+    });
+  }
+
+  /* -- marketplace import ---------------------------------------------------
+     Facebook will hand you an HTML export of your own listings, on request. It
+     carries titles, descriptions and dates, and does not carry prices, photos or
+     listing links. So this fills what it can and says plainly what it cannot.
+
+     Everything happens in this page. The file is read here and never uploaded.
+     ------------------------------------------------------------------------ */
+
+  var IMPORT_KEY = 'kadprints.admin.lastImport';
+  var IMPORT_EVERY_DAYS = 14;
+
+  function paintNudge() {
+    var el = document.getElementById('impNudge');
+    if (!el) return;
+
+    var last = null;
+    try { last = localStorage.getItem(IMPORT_KEY); } catch (err) {}
+
+    if (!last) {
+      el.hidden = false;
+      el.textContent =
+        'You have not imported a Marketplace export here yet. It fills in listings the ' +
+        'catalog is missing, and the descriptions you already wrote on Facebook.';
+      return;
+    }
+
+    var days = Math.floor((Date.now() - new Date(last + 'T00:00:00Z').getTime()) / 86400000);
+    if (isNaN(days) || days < IMPORT_EVERY_DAYS) { el.hidden = true; return; }
+
+    el.hidden = false;
+    el.textContent =
+      'Your last Marketplace import was ' + days + ' days ago. Facebook only produces an ' +
+      'export when you ask for one, so this cannot run on its own: request a fresh export ' +
+      'and drop it in.';
+  }
+
+  var MONTHS = {
+    jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+    jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+  };
+
+  // "Sep 15, 2026 10:36:48 am" -> "2026-09-15". Built by hand rather than given
+  // to Date(), which parses that string differently from one browser to the next.
+  function exportDate(value) {
+    var m = /^([A-Za-z]{3})[a-z]*\s+(\d{1,2}),\s*(\d{4})/.exec(String(value || '').trim());
+    if (!m) return '';
+    var month = MONTHS[m[1].toLowerCase()];
+    if (month === undefined) return '';
+    var d = new Date(Date.UTC(Number(m[3]), month, Number(m[2])));
+    return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+  }
+
+  // Each listing is the innermost <section> that holds a Title row. Anchoring on
+  // that rather than on Facebook's class names, which are generated and change.
+  function parseExport(text) {
+    var doc = new DOMParser().parseFromString(text, 'text/html');
+
+    function fieldsOf(section) {
+      var out = {};
+      var rows = section.querySelectorAll('tr');
+      Array.prototype.forEach.call(rows, function (tr) {
+        // A two cell row is a field. The location and image-size rows use one
+        // cell with colspan and wrap a whole table, so they fall out here.
+        if (tr.children.length !== 2) return;
+        var key = (tr.children[0].textContent || '').trim();
+        var val = (tr.children[1].textContent || '').trim();
+        // "Update time" appears twice; the first is the listing's own.
+        if (key && !(key in out)) out[key] = val;
+      });
+      return out;
+    }
+
+    function hasTitle(section) {
+      return Boolean(fieldsOf(section).Title);
+    }
+
+    var blocks = Array.prototype.filter.call(doc.querySelectorAll('section'), function (sec) {
+      if (!hasTitle(sec)) return false;
+      // Keep only the innermost one, or every ancestor would count as a listing.
+      return !Array.prototype.some.call(sec.querySelectorAll('section'), hasTitle);
+    });
+
+    return blocks.map(function (sec) {
+      var f = fieldsOf(sec);
+      return {
+        title: f.Title || '',
+        description: f.Description || '',
+        listed: exportDate(f['Creation time']),
+        photos: Number(f['Attached image count'] || 0) || 0,
+        group: f.Name || '',
+      };
+    }).filter(function (r) { return r.title; });
+  }
+
+  // Words that say "this is something I bought and am reselling" and words that
+  // say "this is something I printed". A resale word wins, so a Tesla charger
+  // does not sneak in on the strength of the word "adapter".
+  var RESALE_WORDS = [
+    'tesla charger', 'mobile charger', 'nema', 'j1772', 'adapter', 'watch',
+    'clutch', 'wallet', 'puzzle', 'trimmer', 'curtain motor', 'seiko',
+    'armani', 'oris', 'poljot',
+  ];
+  var PRINT_WORDS = [
+    'key holder', 'keyholder', 'key hanger', 'keychain', 'key chain', 'hanger',
+    'holder', 'sculpture', 'painting', 'shelf', 'frame', 'statue', 'logo',
+    'ashtray', 'organizer', 'organiser',
+  ];
+
+  function hasAny(text, words) {
+    for (var i = 0; i < words.length; i++) {
+      if (text.indexOf(words[i]) !== -1) return true;
+    }
+    return false;
+  }
+
+  function looksPrinted(title) {
+    var t = String(title).toLowerCase();
+    if (hasAny(t, RESALE_WORDS)) return false;
+    return hasAny(t, PRINT_WORDS);
+  }
+
+  function guessCategory(title) {
+    var t = String(title).toLowerCase();
+    if (hasAny(t, ['sculpture', 'painting', 'statue'])) return 'art';
+    if (hasAny(t, ['shelf', 'frame', 'logo', 'ashtray', 'organizer', 'organiser'])) return 'desk';
+    if (hasAny(t, ['key holder', 'keyholder', 'key hanger', 'keychain', 'key chain', 'hanger', 'holder'])) {
+      return 'key-holders';
+    }
+    return 'custom';
+  }
+
+  // The export is all lowercase. A word carrying a digit is a model name and goes
+  // up whole: rs6 -> RS6, lc500 -> LC500.
+  var UPPER_WORDS = { gt: 1, gtr: 1, svj: 1, amg: 1, bmw: 1, vw: 1, rs: 1, f1: 1 };
+  var SMALL_WORDS = {
+    a: 1, an: 1, and: 1, the: 1, or: 1, of: 1, for: 1, with: 1, to: 1, in: 1, on: 1,
+  };
+
+  function titleCase(text) {
+    var first = true;
+    // Matched as runs of letters and digits rather than split on spaces, so that
+    // "key holder/hanger" and "(custom built)" both come out right. An
+    // apostrophe stays inside the word, or "men's" becomes "Men'S".
+    return String(text).replace(/[a-z0-9]+(?:['’][a-z]+)?/gi, function (word) {
+      var lower = word.toLowerCase();
+      var wasFirst = first;
+      first = false;
+      if (/\d/.test(word) || UPPER_WORDS[lower]) return word.toUpperCase();
+      if (!wasFirst && SMALL_WORDS[lower]) return lower;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    });
+  }
+
+  function normal(text) {
+    return String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+
+  // Works out, for every listing in the export, whether it is new, whether it
+  // improves something already in the catalog, or whether it should be left out.
+  function planImport(records) {
+    var seen = {};
+    var unique = [];
+
+    records.forEach(function (r) {
+      // Cross-posting the same piece to four groups produces four identical
+      // entries. Same title and same words means the same listing.
+      var key = normal(r.title) + '|' + normal(r.description);
+      if (seen[key]) {
+        seen[key].copies++;
+        // Keep the earliest date: that is when it first went up.
+        if (r.listed && (!seen[key].listed || r.listed < seen[key].listed)) seen[key].listed = r.listed;
+        return;
+      }
+      r.copies = 1;
+      seen[key] = r;
+      unique.push(r);
+    });
+
+    var index = buildIndex();
+    var rows = [];
+
+    unique.forEach(function (r) {
+      var ranked = scoreAll(tokenise(r.title), index);
+      var best = ranked[0] || { i: -1, score: 0 };
+      var match = best.score >= 0.72 ? items[best.i] : null;
+
+      if (!looksPrinted(r.title)) {
+        rows.push({
+          kind: 'skip', on: false, rec: r,
+          reason: match ? 'Not a printed piece' : 'Not a printed piece, and not in the catalog',
+        });
+        return;
+      }
+
+      if (match) {
+        var fillsDescription = Boolean(r.description) && !String(match.description || '').trim();
+        var fillsDate = Boolean(r.listed) && !String(match.listed || '').trim();
+        if (!fillsDescription && !fillsDate) {
+          rows.push({
+            kind: 'skip', on: false, rec: r, match: match,
+            reason: 'Already in the catalog, nothing to add',
+          });
+          return;
+        }
+        rows.push({
+          kind: 'update', on: true, rec: r, match: match,
+          fillsDescription: fillsDescription, fillsDate: fillsDate,
+          reason: [
+            fillsDescription ? 'adds the description' : '',
+            fillsDate ? 'adds the date listed' : '',
+          ].filter(Boolean).join(' and '),
+        });
+        return;
+      }
+
+      rows.push({
+        kind: 'new', on: true, rec: r,
+        category: guessCategory(r.title),
+        reason: 'Not in the catalog',
+      });
+    });
+
+    return rows;
+  }
+
+  var impPlan = [];
+
+  var impPanel = document.getElementById('imp');
+  var impDrop = document.getElementById('impDrop');
+  var impOut = document.getElementById('impOut');
+  var impSummary = document.getElementById('impSummary');
+  var impGroups = document.getElementById('impGroups');
+
+  var GROUP_TITLES = {
+    'new': 'New pieces to add',
+    update: 'Already here, and the export fills a gap',
+    skip: 'Left out',
+  };
+
+  function renderPlan() {
+    if (!impPlan.length) {
+      impOut.hidden = true;
+      return;
+    }
+    impOut.hidden = false;
+
+    var html = '';
+    ['new', 'update', 'skip'].forEach(function (kind) {
+      var rows = impPlan.map(function (row, k) { return { row: row, k: k }; })
+        .filter(function (x) { return x.row.kind === kind; });
+      if (!rows.length) return;
+
+      html += '<div class="imp-group"><h3>' + esc(GROUP_TITLES[kind]) +
+        ' <span class="n">' + rows.length + '</span></h3>';
+
+      html += rows.map(function (x) {
+        var row = x.row;
+        var r = row.rec;
+        var bits = [row.reason];
+        if (r.listed) bits.push('listed ' + r.listed);
+        if (r.copies > 1) bits.push(r.copies + ' copies in the export, merged');
+        if (r.photos) bits.push(r.photos + ' photo' + (r.photos === 1 ? '' : 's') + ' on Facebook');
+
+        return (
+          '<label class="ir">' +
+            '<input type="checkbox" data-k="' + x.k + '"' + (row.on ? ' checked' : '') + '>' +
+            '<span class="ir-text">' +
+              '<span class="ir-title">' + esc(titleCase(r.title)) + '</span>' +
+              (r.description
+                ? '<span class="ir-desc">' + esc(r.description) + '</span>'
+                : '<span class="ir-desc none">no description in the export</span>') +
+              '<span class="ir-meta">' + esc(bits.join('  ·  ')) + '</span>' +
+            '</span>' +
+            (row.kind === 'new'
+              ? '<select class="ir-cat" data-k="' + x.k + '">' + categoryOptions(row.category) + '</select>'
+              : '') +
+          '</label>'
+        );
+      }).join('');
+
+      html += '</div>';
+    });
+
+    impGroups.innerHTML = html;
+
+    var on = impPlan.filter(function (r) { return r.on; });
+    var adds = on.filter(function (r) { return r.kind === 'new'; }).length;
+    var updates = on.filter(function (r) { return r.kind === 'update'; }).length;
+    impSummary.textContent =
+      adds + ' to add, ' + updates + ' to fill in, out of ' + impPlan.length +
+      ' listings in the export. Nothing changes until you press the button.';
+  }
+
+  function readFile(file) {
+    if (file.text) return file.text();
+    return new Promise(function (resolve, reject) {
+      var fr = new FileReader();
+      fr.onload = function () { resolve(String(fr.result)); };
+      fr.onerror = function () { reject(fr.error); };
+      fr.readAsText(file);
+    });
+  }
+
+  function takeExport(file) {
+    if (!file) return;
+    if (!/\.html?$/i.test(file.name)) {
+      alert(
+        'That is not the right file.\n\n' +
+        'Inside the download, the one you want is your_marketplace_items.html'
+      );
+      return;
+    }
+
+    readFile(file).then(function (text) {
+      var records;
+      try { records = parseExport(text); }
+      catch (err) { records = []; }
+
+      if (!records.length) {
+        alert(
+          'No listings were found in that file.\n\n' +
+          'It should be your_marketplace_items.html from a Marketplace download, ' +
+          'requested in HTML rather than JSON.'
+        );
+        return;
+      }
+
+      impPlan = planImport(records);
+      renderPlan();
+    }).catch(function (err) {
+      alert('Could not read that file: ' + err.message);
+    });
+  }
+
+  if (impGroups) {
+    impGroups.addEventListener('change', function (e) {
+      var box = e.target.closest('input[type="checkbox"]');
+      if (box) {
+        var row = impPlan[Number(box.dataset.k)];
+        if (row) row.on = box.checked;
+        renderPlan();
+        return;
+      }
+      var sel = e.target.closest('.ir-cat');
+      if (sel) {
+        var r2 = impPlan[Number(sel.dataset.k)];
+        if (r2) r2.category = sel.value;
+      }
+    });
+  }
+
+  function applyImport() {
+    var chosen = impPlan.filter(function (r) { return r.on; });
+    if (!chosen.length) return;
+
+    var added = 0;
+    var filled = 0;
+
+    // Added in reverse so they end up at the top in the order they were listed.
+    chosen.filter(function (r) { return r.kind === 'new'; }).reverse().forEach(function (row) {
+      var r = row.rec;
+      items.unshift({
+        id: uniqueId(slug(r.title)),
+        name: titleCase(r.title),
+        category: row.category,
+        // The export has no price. Left empty on purpose rather than invented.
+        price: '',
+        listed: r.listed || new Date().toISOString().slice(0, 10),
+        description: r.description || '',
+        printHours: null,
+        images: [],
+        colors: [],
+        marketplaceUrl: '',
+      });
+      added++;
+    });
+
+    chosen.filter(function (r) { return r.kind === 'update'; }).forEach(function (row) {
+      if (row.fillsDescription) row.match.description = row.rec.description;
+      if (row.fillsDate) row.match.listed = row.rec.listed;
+      filled++;
+    });
+
+    try { localStorage.setItem(IMPORT_KEY, new Date().toISOString().slice(0, 10)); } catch (err) {}
+
+    impPlan = [];
+    renderPlan();
+    impPanel.hidden = true;
+    paintNudge();
+
+    markDirty();
+    render();
+
+    var parts = [];
+    if (added) parts.push(added + ' added');
+    if (filled) parts.push(filled + ' filled in');
+    toast(parts.join(', ') + '. Set their prices, then save.');
+
+    if (added) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  var impBtn = document.getElementById('impBtn');
+  if (impBtn && impPanel) {
+    impBtn.addEventListener('click', function () {
+      impPanel.hidden = !impPanel.hidden;
+      if (!impPanel.hidden) impPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    document.getElementById('impClose').addEventListener('click', function () {
+      impPanel.hidden = true;
+    });
+    document.getElementById('impReset').addEventListener('click', function () {
+      impPlan = [];
+      renderPlan();
+    });
+    document.getElementById('impApply').addEventListener('click', applyImport);
+
+    document.getElementById('impPick').addEventListener('click', function () {
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.html,.htm,text/html';
+      input.addEventListener('change', function () { takeExport(input.files[0]); });
+      input.click();
+    });
+
+    ['dragenter', 'dragover'].forEach(function (evt) {
+      impDrop.addEventListener(evt, function (e) {
+        e.preventDefault();
+        impDrop.classList.add('over');
+      });
+    });
+    ['dragleave', 'dragend'].forEach(function (evt) {
+      impDrop.addEventListener(evt, function () { impDrop.classList.remove('over'); });
+    });
+    impDrop.addEventListener('drop', function (e) {
+      e.preventDefault();
+      impDrop.classList.remove('over');
+      takeExport(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
     });
   }
 })();

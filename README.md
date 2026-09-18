@@ -164,6 +164,7 @@ robots.txt          keeps crawlers out of /admin and /api
 favicon.svg         the tab icon. favicon.ico and apple-touch-icon.png match it
 
 admin/              the editor. index.html, admin.css, admin.js, config.js
+                    (bulk photos, Marketplace import, description drafts)
 api/save.js         commits products.js to GitHub when you press publish
 api/product.js      renders /p/<id> for link previews and for Google
 api/sitemap.js      builds sitemap.xml from products.js
@@ -212,6 +213,40 @@ high to low. Newest uses the `listed` date on each product.
 Anything listed in the last 14 days gets a "Just listed" flag on its tile. It
 appears and disappears by itself as those dates age, so there is nothing to turn
 off later.
+
+## Importing your Marketplace listings
+
+Facebook will give you your own listings as a file, and the editor can read it.
+
+**Getting the file.** On Facebook: Settings > Your information > Download your
+information. Tick **Marketplace**, choose **HTML** rather than JSON, and request
+it. Facebook takes a while and then emails you a download. Inside it, the file
+you want is `your_marketplace_items.html`.
+
+**Using it.** In the editor, press **Import from Marketplace** and drop that file
+on the box. Nothing is uploaded: the file is read in your browser.
+
+It sorts every listing into three piles and shows you all of them before anything
+changes:
+
+- **New pieces to add** — printed things the catalog does not have.
+- **Already here** — a piece the catalog has, where the export fills in a gap,
+  usually the description you already wrote on Facebook.
+- **Left out** — resale items like chargers and watches, and listings where there
+  is nothing to add. Untick and tick anything you disagree with.
+
+The same piece cross-posted to four groups arrives four times in the export. Those
+are merged into one, and the row says how many copies it found.
+
+**What it cannot do.** The export has no prices, no photos and no listing links.
+So an imported piece arrives without a price, and the editor says so in a note
+rather than treating it as an error. Add the price, then use **Add photos in bulk**
+for the pictures.
+
+**Why it is not automatic.** Facebook only produces an export when you ask for
+one, by hand, and the download link is tied to your account. Nothing can fetch it
+on a schedule. The editor keeps the date of your last import and reminds you after
+two weeks, which is as close to automatic as this can honestly get.
 
 ## Photos, the fast way
 

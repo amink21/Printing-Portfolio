@@ -34,6 +34,9 @@
       <span class="tag">Editor</span>
       <span class="spacer"></span>
       <span class="dirty" id="dirty" hidden>Unsaved changes</span>
+      <button class="btn btn-ghost" id="impBtn" type="button">
+        <i class="ph ph-download-simple" aria-hidden="true"></i> Import from Marketplace
+      </button>
       <button class="btn btn-ghost" id="bulkBtn" type="button">
         <i class="ph ph-images" aria-hidden="true"></i> Add photos in bulk
       </button>
@@ -68,6 +71,48 @@
       <p>Drop that file into GitHub, replacing the old <code>products.js</code>, and commit. The site updates itself.</p>
     </div>
   </div>
+
+  <p class="nudge" id="impNudge" hidden></p>
+
+  <!-- MARKETPLACE IMPORT ---------------------------------------------------
+       Reads the HTML export Facebook gives you and works out which listings are
+       new, which ones the catalog already has, and which are not prints at all.
+       Nothing is uploaded: the file is read here in the browser. -->
+  <section class="imp" id="imp" hidden>
+    <div class="bulk-head">
+      <div>
+        <h2>Import from your Marketplace export</h2>
+        <p class="bulk-sub">
+          On Facebook: <b>Settings &gt; Your information &gt; Download your information</b>,
+          tick <b>Marketplace</b>, choose <b>HTML</b>, and request it. When the download
+          arrives, drop <code>your_marketplace_items.html</code> here.
+        </p>
+        <p class="bulk-sub">
+          It brings in <b>titles, descriptions and the date you listed</b>. It cannot bring
+          prices, photos or listing links, because the export does not contain them. You
+          check every row before anything changes.
+        </p>
+      </div>
+      <button class="mini" type="button" id="impClose">Close</button>
+    </div>
+
+    <div class="drop" id="impDrop">
+      <i class="ph ph-file-html" aria-hidden="true"></i>
+      <p class="drop-title">Drop your_marketplace_items.html here</p>
+      <p class="drop-sub">
+        or <button type="button" class="linkbtn" id="impPick">choose the file</button>
+      </p>
+    </div>
+
+    <div class="imp-out" id="impOut" hidden>
+      <p class="bulk-summary" id="impSummary"></p>
+      <div class="imp-groups" id="impGroups"></div>
+      <div class="bulk-acts">
+        <button class="btn btn-primary" type="button" id="impApply">Apply the ticked rows</button>
+        <button class="mini" type="button" id="impReset">Start over</button>
+      </div>
+    </div>
+  </section>
 
   <!-- BULK PHOTOS ---------------------------------------------------------
        Drop the lot in at once. Filenames are matched against product names, you

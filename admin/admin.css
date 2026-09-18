@@ -522,3 +522,105 @@ body.admin { background: var(--plane); }
   .abar-in .btn { flex: 1 1 auto; justify-content: center; }
   .spacer { flex-basis: 100%; height: 0; }
 }
+
+/* ============================================================================
+   MARKETPLACE IMPORT
+   ============================================================================ */
+
+.nudge {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+  border-radius: var(--radius-surface);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.imp {
+  margin: 0 0 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-surface);
+  padding: 20px;
+}
+.imp .bulk-sub + .bulk-sub { margin-top: 8px; }
+
+.imp-out { margin-top: 16px; }
+.imp-group + .imp-group { margin-top: 20px; }
+.imp-group h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.imp-group h3 .n {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  background: var(--sunken);
+  border-radius: var(--radius-control);
+  font-size: 11.5px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* One listing from the export. The whole row is the label, so the tick target
+   is the row rather than a six pixel box. */
+.ir {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) minmax(0, 200px);
+  align-items: start;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+}
+.ir + .ir { margin-top: 6px; }
+.ir:hover { border-color: var(--line-strong); }
+.ir input[type='checkbox'] { width: 16px; height: 16px; margin: 2px 0 0; cursor: pointer; }
+.ir-text { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ir-title { font-size: 14.5px; font-weight: 600; letter-spacing: -0.01em; }
+.ir-desc {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ir-desc.none { color: var(--muted); font-style: italic; }
+.ir-meta { font-size: 12px; font-weight: 500; color: var(--muted); }
+.ir-cat {
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+/* A note rather than a fault: the warning bar softens when nothing is broken. */
+.warn.soft {
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--line));
+  color: var(--ink-2);
+}
+
+@media (max-width: 760px) {
+  .ir {
+    grid-template-columns: 20px minmax(0, 1fr);
+    grid-template-areas: 'box text' '. cat';
+    row-gap: 8px;
+  }
+  .ir input[type='checkbox'] { grid-area: box; }
+  .ir-text { grid-area: text; }
+  .ir-cat { grid-area: cat; width: 100%; }
+}
