@@ -101,8 +101,8 @@
     <div class="wrap stats-inner">
       <div class="stat"><span class="stat-n" id="statPieces">0</span><span class="stat-l">designs in the catalog</span></div>
       <div class="stat"><span class="stat-n" id="statCats">0</span><span class="stat-l">categories</span></div>
-      <div class="stat"><span class="stat-n" id="statColors">0</span><span class="stat-l">filament colours</span></div>
-      <div class="stat"><span class="stat-n">Montreal</span><span class="stat-l">printed and shipped from</span></div>
+      <div class="stat"><span class="stat-n">Any</span><span class="stat-l">colour you ask for</span></div>
+      <div class="stat"><span class="stat-n">Montreal</span><span class="stat-l" id="statWhere">pickup, or delivered to you</span></div>
     </div>
   </section>
 
@@ -167,16 +167,22 @@
         </div>
         <div class="fact reveal">
           <i class="ph ph-palette" aria-hidden="true"></i>
-          <h3>Your colour</h3>
-          <p>Most pieces come in any of the colours below. Ask for a combination and you will usually get it.</p>
+          <h3>Any colour</h3>
+          <p>
+            Not a list to pick from. Name the colour you want, or a combination,
+            and it gets printed that way.
+          </p>
         </div>
         <div class="fact reveal">
           <i class="ph ph-clock" aria-hidden="true"></i>
           <h3>A day or two</h3>
-          <p>Small pieces print in a few hours, the bigger sculptures overnight. Pickup in Montreal, or shipped.</p>
+          <p id="factWhen">
+            Small pieces print in a few hours, the bigger sculptures overnight.
+          </p>
         </div>
       </div>
-      <div class="palette" id="palette" aria-label="Filament colours available"></div>
+      <p class="palette-lead">Usually on the shelf, though it is not a limit:</p>
+      <div class="palette" id="palette" aria-label="Colours usually in stock"></div>
     </div>
   </section>
 
@@ -195,13 +201,18 @@
           <label for="qWhat">What do you want made</label>
           <input id="qWhat" placeholder="A key holder for a Mk7 Golf" autocomplete="off">
         </div>
-        <div class="q">
-          <label for="qColor">Colour</label>
-          <select id="qColor"></select>
+        <div class="q f-2">
+          <label for="qColor">Colour <span class="opt">anything, not just the ones below</span></label>
+          <input id="qColor" list="colourList" placeholder="Racing green, or black with red wheels" autocomplete="off">
+          <datalist id="colourList"></datalist>
         </div>
         <div class="q">
           <label for="qQty">How many</label>
           <input id="qQty" type="number" min="1" step="1" value="1">
+        </div>
+        <div class="q" id="qHowWrap">
+          <label for="qHow">Getting it to you</label>
+          <select id="qHow"></select>
         </div>
         <div class="q f-2">
           <label for="qNotes">Anything else <span class="opt">optional</span></label>
@@ -259,8 +270,9 @@
       <p class="sheet-desc" id="detailDesc"></p>
 
       <div class="sheet-colors" id="detailColors" hidden>
-        <p class="sheet-colors-label">Available in <b id="detailColorName"></b></p>
-        <div class="swatches" id="detailSwatches" role="radiogroup" aria-label="Filament colour"></div>
+        <p class="sheet-colors-label" id="detailColorLead">Printed in <b id="detailColorName"></b></p>
+        <div class="swatches" id="detailSwatches" role="radiogroup" aria-label="Colour"></div>
+        <p class="sheet-colors-note" id="detailColorNote"></p>
       </div>
 
       <dl class="sheet-specs" id="detailSpecs"></dl>

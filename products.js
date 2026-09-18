@@ -80,15 +80,17 @@ const CATEGORIES = [
 /* ----------------------------------------------------------------------------
    FILAMENT COLOURS
    ----------------------------------------------------------------------------
-   The colours you can print in. These show on a product as "Available in", so a
-   buyer knows they are not stuck with whatever colour the photo happens to be.
+   You print in any colour, so the site says that. This list is not a menu of
+   what is allowed: it is the handful you usually have on the shelf, shown as
+   dots so a buyer has something to point at instead of a blank box.
 
    Add, remove or rename freely. The hex only draws the little dot, so pick
    whatever looks closest to the real spool.
 
-   To say one product comes in only some of these, give that product a colors
-   list naming them:  colors: ['Black', 'Red'].  A product with no colors list
-   offers everything below.
+   If one product genuinely only comes in some colours, give that product a
+   colors list naming them:  colors: ['Black', 'Red'].  That product then says
+   "Available in Black or Red" instead of "any colour", which is the one case
+   where the site should not promise anything.
    -------------------------------------------------------------------------- */
 
 const FILAMENT_COLORS = [
@@ -116,6 +118,26 @@ const FILAMENT_COLORS = [
    -------------------------------------------------------------------------- */
 
 const FEATURED = [];
+
+/* ----------------------------------------------------------------------------
+   PICKUP AND DELIVERY
+   ----------------------------------------------------------------------------
+   Set offered to false and every mention of delivery disappears from the site.
+
+   price is written exactly as you want it read. Leave it empty and the site
+   says "for a fee" rather than inventing a number, which is the honest thing
+   to show until you decide what to charge.
+
+     price: ''            ->  "or delivered for a fee, depending on where you are"
+     price: '$10'         ->  "or delivered for $10"
+     price: 'from $10'    ->  "or delivered for from $10"   (so write '$10' here)
+   -------------------------------------------------------------------------- */
+
+const DELIVERY = {
+  offered: true,
+  price: '',
+  pickup: 'Montreal',
+};
 
 const PRODUCTS = [
   {
@@ -817,5 +839,5 @@ const SHEET_CSV_URL = '';
    preview or for Google. In a browser this block does nothing at all.
    -------------------------------------------------------------------------- */
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { PRODUCTS, CATEGORIES, SELLER, FILAMENT_COLORS, FEATURED };
+  module.exports = { PRODUCTS, CATEGORIES, SELLER, FILAMENT_COLORS, FEATURED, DELIVERY };
 }

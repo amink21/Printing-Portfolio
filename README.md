@@ -278,13 +278,31 @@ that is not true before you publish.
 
 ## Colours
 
-`FILAMENT_COLORS` in `products.js` is the list of colours you print in. It shows
-on the home page and on every product as "Available in", and it fills the colour
-dropdown in the custom request form.
+The site says you print in any colour, because you do. `FILAMENT_COLORS` in
+`products.js` is not a menu of what is allowed: it is the handful usually on the
+shelf, shown as dots so a buyer has something to point at. The colour box in the
+request form is free text with those as suggestions, so "racing green with bronze
+wheels" goes straight through.
 
-If one product only comes in some of them, give that product a `colors` list in
-the editor, for example `Black, Red`. Leave it empty and that product offers
-everything on the list.
+The one exception is a product that genuinely is limited. Give it a `colors` list
+in the editor, for example `Black, Red`, and that product says "Available in Black
+or Red" instead of promising anything.
+
+## Pickup and delivery
+
+`DELIVERY` in `products.js`:
+
+```js
+const DELIVERY = { offered: true, price: '', pickup: 'Montreal' };
+```
+
+Set `price` to whatever you charge, written how you want it read, for example
+`'$10'`. Leave it empty and the site says "for a fee, depending on where you are"
+rather than inventing a number.
+
+Set `offered: false` and every mention of delivery disappears: the how-it-works
+line, the stats strip, the spec on each piece, and the question in the request
+form.
 
 ## The saved list
 

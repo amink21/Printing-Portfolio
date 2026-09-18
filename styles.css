@@ -1384,3 +1384,20 @@ section[id], main[id] { scroll-margin-top: calc(var(--header-h) + 12px); }
 /* A 16:9 stage across a 1180px page is 660px tall, which is more screen than any
    single tile deserves. The ratio holds until it hits the cap. */
 .show-stage { max-height: 480px; }
+
+/* The palette reads as a suggestion now, not a list of what is allowed. */
+.palette-lead {
+  margin: clamp(20px, 3vw, 30px) 0 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.palette-lead + .palette { margin-top: 0; }
+
+.sheet-colors-note {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.sheet-colors-note:empty { display: none; }

@@ -30,7 +30,8 @@
   var dAlt = document.getElementById('detailAlt');
   var dClose = document.getElementById('detailClose');
   var dColors = document.getElementById('detailColors');
-  var dColorName = document.getElementById('detailColorName');
+  var dColorLead = document.getElementById('detailColorLead');
+  var dColorNote = document.getElementById('detailColorNote');
   var dSwatches = document.getElementById('detailSwatches');
   var dSave = document.getElementById('detailSave');
   var dSaveLabel = document.getElementById('detailSaveLabel');
@@ -100,6 +101,33 @@
 
   function palette() {
     return (typeof FILAMENT_COLORS !== 'undefined' && FILAMENT_COLORS) || [];
+  }
+
+  /* -- delivery ------------------------------------------------------------
+     Every sentence about getting the thing to someone comes from here, so
+     turning it off in products.js takes it off the whole site. ------------- */
+
+  function delivery() {
+    return (typeof DELIVERY === 'object' && DELIVERY) || { offered: false };
+  }
+
+  function pickupPlace() {
+    return delivery().pickup || 'Montreal';
+  }
+
+  // No price set means no number invented. "For a fee" is the honest version.
+  function deliveryPhrase() {
+    var d = delivery();
+    if (!d.offered) return '';
+    return d.price
+      ? 'delivered for ' + d.price
+      : 'delivered for a fee, depending on where you are';
+  }
+
+  // "Black or Red", "Black, Red or Silver".
+  function joinList(names) {
+    if (names.length < 2) return names[0] || '';
+    return names.slice(0, -1).join(', ') + ' or ' + names[names.length - 1];
   }
 
   /* -- helpers ------------------------------------------------------------ */
@@ -739,7 +767,6 @@
   function initStats() {
     var pieces = document.getElementById('statPieces');
     var cats = document.getElementById('statCats');
-    var colors = document.getElementById('statColors');
 
     var used = {};
     products.forEach(function (p) { used[p.category] = true; });
@@ -747,7 +774,6 @@
     var targets = [
       [pieces, products.length],
       [cats, Object.keys(used).length],
-      [colors, palette().length],
     ];
 
     var section = document.querySelector('.stats');
@@ -790,8 +816,24 @@
     if (!list.length) { dColors.hidden = true; return; }
     dColors.hidden = false;
 
+    // A product only says "available in" when it genuinely is limited. Every
+    // other one can be printed in whatever colour is asked for, and saying so
+    // is the point: the dots are a prompt, not a menu.
+    var limited = Boolean(product && product.colors && product.colors.length);
     var picked = chosenColor[product.id] || '';
-    dColorName.textContent = picked || (list.length + ' colours');
+
+    if (picked) {
+      dColorLead.innerHTML = 'Printed in <b>' + esc(picked) + '</b>';
+    } else if (limited) {
+      dColorLead.innerHTML = 'Available in <b>' +
+        esc(joinList(list.map(function (c) { return c.name; }))) + '</b>';
+    } else {
+      dColorLead.innerHTML = 'Printed in <b>any colour you like</b>';
+    }
+
+    dColorNote.textContent = limited
+      ? 'This one is only done in those.'
+      : 'These are what is usually on the shelf. Ask for anything else, or a mix.';
 
     dSwatches.innerHTML = list.map(function (c) {
       return (
@@ -851,6 +893,9 @@
       specs += '<div class="spec"><dt>Print time</dt><dd>' + esc(product.printHours) + ' hours</dd></div>';
     }
     specs += '<div class="spec"><dt>Made</dt><dd>To order</dd></div>';
+    specs += '<div class="spec"><dt>Getting it</dt><dd>' +
+      (delivery().offered ? 'Pickup or delivery' : 'Pickup in ' + esc(pickupPlace())) +
+      '</dd></div>';
     if (product.listed) {
       specs += '<div class="spec"><dt>Listed</dt><dd>' + esc(niceDate(product.listed)) + '</dd></div>';
     }
@@ -1101,17 +1146,21 @@
   var qNotes = document.getElementById('qNotes');
   var qPreview = document.getElementById('qPreview');
 
+  var qHow = document.getElementById('qHow');
+  var qHowWrap = document.getElementById('qHowWrap');
+
   function quoteText() {
     var what = (qWhat.value || '').trim();
-    var color = qColor.value;
+    var color = (qColor.value || '').trim();
     var qty = Math.max(1, Number(qQty.value) || 1);
     var notes = (qNotes.value || '').trim();
 
     var lines = ['Hi, I saw your site and I am after something custom.'];
     lines.push('');
     lines.push('What: ' + (what || '(describe the piece here)'));
-    if (color) lines.push('Colour: ' + color);
+    lines.push('Colour: ' + (color || 'not fussy, suggest something'));
     lines.push('How many: ' + qty);
+    if (qHow && qHowWrap && !qHowWrap.hidden) lines.push('Getting it: ' + qHow.value);
     if (notes) lines.push('Notes: ' + notes);
     lines.push('');
     lines.push('What would that cost?');
@@ -1123,11 +1172,27 @@
   }
 
   if (quoteForm) {
-    qColor.innerHTML =
-      '<option value="">Not sure yet</option>' +
-      palette().map(function (c) {
-        return '<option value="' + esc(c.name) + '">' + esc(c.name) + '</option>';
+    // Suggestions on a text box, not a dropdown. Typing "racing green" has to
+    // work, because that is the actual offer.
+    var colourList = document.getElementById('colourList');
+    if (colourList) {
+      colourList.innerHTML = palette().map(function (c) {
+        return '<option value="' + esc(c.name) + '"></option>';
       }).join('');
+    }
+
+    var d = delivery();
+    if (qHow) {
+      var options = ['<option value="Pickup">Pickup in ' + esc(pickupPlace()) + '</option>'];
+      if (d.offered) {
+        options.push(
+          '<option value="Delivery">Delivery' +
+          (d.price ? ' (' + esc(d.price) + ')' : ' (for a fee)') + '</option>'
+        );
+      }
+      qHow.innerHTML = options.join('');
+    }
+    if (qHowWrap && !d.offered) qHowWrap.hidden = true;
 
     ['input', 'change'].forEach(function (evt) {
       quoteForm.addEventListener(evt, syncQuote);
@@ -1417,6 +1482,18 @@
         section.scrollIntoView({ behavior: 'instant', block: 'start' });
       });
     }
+  }
+
+  // How it works and the stats strip both state the pickup and delivery deal,
+  // and both are written from the config rather than typed into the markup.
+  var factWhen = document.getElementById('factWhen');
+  if (factWhen) {
+    factWhen.textContent = factWhen.textContent.trim() + ' Pickup in ' + pickupPlace() +
+      (delivery().offered ? ', or ' + deliveryPhrase() + '.' : '.');
+  }
+  var statWhere = document.getElementById('statWhere');
+  if (statWhere && !delivery().offered) {
+    statWhere.textContent = 'printed and collected in';
   }
 
   // Outbound links, all from the one config block in products.js.
