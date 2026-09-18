@@ -252,8 +252,10 @@
           '<div class="f c12"><label>Description. One plain sentence, or leave empty</label>' +
             '<textarea data-f="description" data-i="' + i + '" rows="1">' + esc(p.description || '') + '</textarea></div>' +
 
-          '<div class="f c12"><label>Marketplace link for this piece</label>' +
+          '<div class="f c6"><label>Marketplace link for this piece</label>' +
             '<input data-f="marketplaceUrl" data-i="' + i + '" placeholder="https://www.facebook.com/marketplace/item/..." value="' + esc(p.marketplaceUrl || '') + '"></div>' +
+          '<div class="f c6"><label>Colours. Empty means every colour you stock</label>' +
+            '<input data-f="colors" data-i="' + i + '" placeholder="Black, Red, Silver" value="' + esc((p.colors || []).join(', ')) + '"></div>' +
 
           (imgs.length ? '<div class="imgs">' + chips + '</div>' : '') +
 
@@ -296,7 +298,9 @@
     if (!p) return;
 
     if (f === 'printHours') p[f] = el.value === '' ? null : Number(el.value);
-    else p[f] = el.value;
+    else if (f === 'colors') {
+      p[f] = el.value.split(',').map(function (c) { return c.trim(); }).filter(Boolean);
+    } else p[f] = el.value;
 
     if (f === 'name') {
       // Keep the thumbnail caption honest while typing, without a full re-render
@@ -450,6 +454,7 @@
       description: '',
       printHours: null,
       images: [],
+      colors: [],
       marketplaceUrl: '',
     });
     filter = '';
@@ -487,6 +492,9 @@
     lines.push('    description: ' + JSON.stringify(p.description || '') + ',');
     if (p.printHours != null && p.printHours !== '') lines.push('    printHours: ' + p.printHours + ',');
     lines.push('    images: [' + (p.images || []).map(function (s) { return JSON.stringify(s); }).join(', ') + '],');
+    if (p.colors && p.colors.length) {
+      lines.push('    colors: [' + p.colors.map(function (c) { return JSON.stringify(c); }).join(', ') + '],');
+    }
     lines.push('    marketplaceUrl: ' + JSON.stringify(p.marketplaceUrl || '') + ',');
     lines.push('  },');
     return lines.join('\n');
@@ -559,4 +567,402 @@
         );
       });
   });
+
+  /* -- description drafts ---------------------------------------------------
+     A first sentence for the products that have none. It fills empty ones only,
+     never overwrites what you wrote, and it says out loud that these are drafts,
+     because a description that quietly invents a fact is worse than no
+     description at all. ---------------------------------------------------- */
+
+  function suggestDescription(p) {
+    var byCategory = {
+      'key-holders':
+        'Printed to order in the colour you pick. Wall mounted, light, and sized ' +
+        'for an everyday set of keys.',
+      art:
+        'A layered piece, printed to order in the colour you pick. It sits flat ' +
+        'on a shelf or hangs on a wall.',
+      desk:
+        'A desk piece, printed to order in the colour you pick. Made to sit next ' +
+        'to a monitor without taking over the desk.',
+      custom:
+        'Printed to order in the colour you pick. Message me if you want it ' +
+        'resized or in a different combination.',
+    };
+
+    var text = byCategory[p.category] || byCategory.custom;
+    if (p.printHours) text += ' About ' + p.printHours + ' hours on the printer.';
+    return text;
+  }
+
+  var describeBtn = document.getElementById('describeBtn');
+  if (describeBtn) {
+    describeBtn.addEventListener('click', function () {
+      var blank = items.filter(function (p) { return !String(p.description || '').trim(); });
+      if (!blank.length) {
+        toast('Every product already has a description');
+        return;
+      }
+      if (!confirm(
+        'Write a draft description for the ' + blank.length + ' products that have none?\n\n' +
+        'It only fills empty ones and never touches what you wrote yourself.\n' +
+        'Read them and fix anything that is wrong before you publish.'
+      )) return;
+
+      blank.forEach(function (p) { p.description = suggestDescription(p); });
+      markDirty();
+      render();
+      toast(blank.length + ' drafts written. Read them before publishing.');
+    });
+  }
+
+  /* -- bulk photos ----------------------------------------------------------
+     Attaching seventy photos one product at a time is the reason the catalog has
+     none. Drop the whole folder in, let the filenames find their own products,
+     correct what it got wrong, upload once. ------------------------------- */
+
+  var bulkPanel = document.getElementById('bulk');
+  var dropEl = document.getElementById('drop');
+  var matchesEl = document.getElementById('matches');
+  var bulkFoot = document.getElementById('bulkFoot');
+  var bulkSummary = document.getElementById('bulkSummary');
+  var bulkBar = document.getElementById('bulkBar');
+  var bulkFill = document.getElementById('bulkFill');
+
+  var queue = [];
+  var uploading = false;
+
+  // Words that say nothing about which product a file belongs to.
+  var STOP = {
+    img: 1, image: 1, photo: 1, pic: 1, picture: 1, dsc: 1, dscn: 1, pxl: 1,
+    screenshot: 1, final: 1, copy: 1, edit: 1, edited: 1, new: 1, old: 1,
+    the: 1, and: 1, for: 1, with: 1, whatsapp: 1,
+  };
+
+  function tokenise(str) {
+    var parts = String(str)
+      .toLowerCase()
+      .replace(/\.[a-z0-9]+$/, '')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    // A trailing 1, 2, 3 is almost always "which photo", not "which product".
+    while (parts.length > 1 && /^\d{1,2}$/.test(parts[parts.length - 1])) parts.pop();
+
+    return parts.filter(function (t) { return !STOP[t]; });
+  }
+
+  function uniq(list) {
+    var seen = {};
+    return list.filter(function (t) {
+      if (seen[t]) return false;
+      seen[t] = 1;
+      return true;
+    });
+  }
+
+  // "key" and "holder" are in half the catalog, so matching them means almost
+  // nothing. Rare words carry the decision. This is plain inverse document
+  // frequency, which is all the situation needs.
+  function buildIndex() {
+    var df = {};
+    var docs = items.map(function (p) {
+      var t = uniq(tokenise(p.name + ' ' + p.id));
+      t.forEach(function (x) { df[x] = (df[x] || 0) + 1; });
+      return t;
+    });
+    var n = items.length || 1;
+    return {
+      docs: docs,
+      weight: function (t) { return Math.log((n + 1) / ((df[t] || 0) + 1)) + 1; },
+    };
+  }
+
+  function scoreAll(fileTokens, index) {
+    var total = fileTokens.reduce(function (sum, t) { return sum + index.weight(t); }, 0);
+    if (!total) return items.map(function (_, i) { return { i: i, score: 0 }; });
+
+    return index.docs.map(function (doc, i) {
+      var hit = 0;
+      fileTokens.forEach(function (t) {
+        if (doc.indexOf(t) !== -1) hit += index.weight(t);
+      });
+      return { i: i, score: hit / total };
+    }).sort(function (a, b) { return b.score - a.score; });
+  }
+
+  function confidence(score) {
+    if (score >= 0.72) return { label: 'Strong match', cls: 'ok' };
+    if (score >= 0.4) return { label: 'Probable, check it', cls: 'maybe' };
+    return { label: 'No match, pick one', cls: 'no' };
+  }
+
+  function addFiles(fileList) {
+    var files = Array.prototype.slice.call(fileList || []).filter(function (f) {
+      return /^image\//.test(f.type);
+    });
+    if (!files.length) {
+      toast('Those were not image files');
+      return;
+    }
+
+    // Filename order, so photo 1 of a product lands before photo 2.
+    files.sort(function (a, b) {
+      return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+    });
+
+    var index = buildIndex();
+
+    files.forEach(function (file) {
+      var t = tokenise(file.name);
+      var ranked = scoreAll(t, index);
+      var best = ranked[0] || { i: -1, score: 0 };
+      queue.push({
+        file: file,
+        preview: URL.createObjectURL(file),
+        // Below the floor nothing is pre-selected, so a bad guess is never
+        // uploaded just because nobody noticed it.
+        pick: best.score >= 0.4 ? items[best.i].id : '',
+        score: best.score,
+        ranked: ranked,
+        state: '',
+      });
+    });
+
+    renderMatches();
+  }
+
+  function renderMatches() {
+    if (!queue.length) {
+      matchesEl.innerHTML = '';
+      bulkFoot.hidden = true;
+      return;
+    }
+    bulkFoot.hidden = false;
+
+    matchesEl.innerHTML = queue.map(function (q, k) {
+      var c = confidence(q.pick ? q.score : 0);
+      var options = q.ranked.map(function (r) {
+        var p = items[r.i];
+        if (!p) return '';
+        return '<option value="' + esc(p.id) + '"' +
+          (p.id === q.pick ? ' selected' : '') + '>' + esc(p.name) + '</option>';
+      }).join('');
+
+      return (
+        '<div class="m' + (q.state ? ' ' + q.state : '') + '" data-k="' + k + '">' +
+          '<img class="m-shot" src="' + esc(q.preview) + '" alt="">' +
+          '<div class="m-info">' +
+            '<span class="m-file" title="' + esc(q.file.name) + '">' + esc(q.file.name) + '</span>' +
+            '<span class="m-score ' + c.cls + '">' + esc(c.label) + '</span>' +
+          '</div>' +
+          '<select class="m-pick" data-k="' + k + '" aria-label="Product for ' + esc(q.file.name) + '">' +
+            '<option value="">Skip this photo</option>' + options +
+          '</select>' +
+          '<button class="m-rm" type="button" data-k="' + k + '" aria-label="Remove ' + esc(q.file.name) + '">&times;</button>' +
+        '</div>'
+      );
+    }).join('');
+
+    updateSummary();
+  }
+
+  function updateSummary() {
+    var matched = queue.filter(function (q) { return q.pick; }).length;
+    var skipped = queue.length - matched;
+    bulkSummary.textContent =
+      matched + ' of ' + queue.length + ' photos ready' +
+      (skipped ? ', ' + skipped + ' will be skipped' : '');
+    var go = document.getElementById('bulkGo');
+    if (go) go.disabled = matched === 0 || uploading;
+  }
+
+  function resetBulk() {
+    queue.forEach(function (q) {
+      try { URL.revokeObjectURL(q.preview); } catch (err) {}
+    });
+    queue = [];
+    if (bulkBar) bulkBar.hidden = true;
+    if (bulkFill) bulkFill.style.width = '0%';
+    renderMatches();
+  }
+
+  if (matchesEl) {
+    matchesEl.addEventListener('change', function (e) {
+      var sel = e.target.closest('.m-pick');
+      if (!sel) return;
+      var q = queue[Number(sel.dataset.k)];
+      if (!q) return;
+      q.pick = sel.value;
+      // Chosen by hand, so it is as certain as it gets.
+      if (sel.value) q.score = 1;
+      renderMatches();
+    });
+
+    matchesEl.addEventListener('click', function (e) {
+      var rm = e.target.closest('.m-rm');
+      if (!rm) return;
+      var k = Number(rm.dataset.k);
+      try { URL.revokeObjectURL(queue[k].preview); } catch (err) {}
+      queue.splice(k, 1);
+      renderMatches();
+    });
+  }
+
+  function uploadQueue() {
+    if (uploading) return;
+    if (!cloudinaryReady()) {
+      alert(
+        'Cloudinary is not set up yet.\n\n' +
+        'Open admin/config.js and add your uploadPreset. Make it in Cloudinary under\n' +
+        'Settings > Upload > Upload presets, with Signing Mode set to Unsigned.'
+      );
+      return;
+    }
+
+    var jobs = queue.filter(function (q) { return q.pick; });
+    if (!jobs.length) return;
+
+    uploading = true;
+    bulkBar.hidden = false;
+    updateSummary();
+
+    var done = 0;
+    var failed = 0;
+    var at = 0;
+    var active = 0;
+    var LIMIT = 4; // enough to be quick, not enough to choke a home connection
+
+    function paint() {
+      var pct = Math.round(((done + failed) / jobs.length) * 100);
+      bulkFill.style.width = pct + '%';
+      bulkSummary.textContent =
+        'Uploading ' + (done + failed) + ' of ' + jobs.length +
+        (failed ? ', ' + failed + ' failed' : '');
+    }
+
+    function finish() {
+      uploading = false;
+
+      // Attached in queue order rather than in the order the uploads happened,
+      // so photo 1 of a product stays photo 1.
+      var added = 0;
+      queue.forEach(function (q) {
+        if (!q.url || !q.pick) return;
+        var product = null;
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].id === q.pick) { product = items[i]; break; }
+        }
+        if (!product) return;
+        product.images = product.images || [];
+        product.images.push(q.url);
+        added++;
+      });
+
+      markDirty();
+      render();
+
+      if (failed) {
+        bulkSummary.textContent =
+          added + ' attached, ' + failed + ' failed. The failed ones are still listed, try again.';
+        queue = queue.filter(function (q) { return !q.url && q.pick; });
+        queue.forEach(function (q) { q.state = 'failed'; });
+        renderMatches();
+        toast(added + ' photos attached, ' + failed + ' failed');
+      } else {
+        resetBulk();
+        bulkPanel.hidden = true;
+        toast(added + ' photos attached. Save to publish them.');
+      }
+    }
+
+    function next() {
+      if (at >= jobs.length) {
+        if (active === 0) finish();
+        return;
+      }
+      var q = jobs[at++];
+      active++;
+
+      var form = new FormData();
+      form.append('file', q.file);
+      form.append('upload_preset', CLOUDINARY.uploadPreset);
+      if (CLOUDINARY.folder) form.append('folder', CLOUDINARY.folder);
+
+      fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY.cloudName + '/image/upload', {
+        method: 'POST',
+        body: form,
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (!data.secure_url) {
+            throw new Error((data.error && data.error.message) || 'upload refused');
+          }
+          q.url = data.secure_url;
+          done++;
+        })
+        .catch(function (err) {
+          failed++;
+          console.error('Cloudinary upload failed for', q.file.name, err);
+        })
+        .then(function () {
+          active--;
+          paint();
+          next();
+        });
+
+      if (active < LIMIT) next();
+    }
+
+    paint();
+    next();
+  }
+
+  var bulkBtn = document.getElementById('bulkBtn');
+  if (bulkBtn && bulkPanel) {
+    bulkBtn.addEventListener('click', function () {
+      bulkPanel.hidden = !bulkPanel.hidden;
+      if (!bulkPanel.hidden) bulkPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    document.getElementById('bulkClose').addEventListener('click', function () {
+      bulkPanel.hidden = true;
+    });
+    document.getElementById('bulkReset').addEventListener('click', resetBulk);
+    document.getElementById('bulkGo').addEventListener('click', uploadQueue);
+
+    document.getElementById('dropPick').addEventListener('click', function () {
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.multiple = true;
+      input.addEventListener('change', function () { addFiles(input.files); });
+      input.click();
+    });
+
+    ['dragenter', 'dragover'].forEach(function (evt) {
+      dropEl.addEventListener(evt, function (e) {
+        e.preventDefault();
+        dropEl.classList.add('over');
+      });
+    });
+    ['dragleave', 'dragend'].forEach(function (evt) {
+      dropEl.addEventListener(evt, function () { dropEl.classList.remove('over'); });
+    });
+    dropEl.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dropEl.classList.remove('over');
+      addFiles(e.dataTransfer && e.dataTransfer.files);
+    });
+
+    // A photo dropped slightly off target would otherwise replace the page with
+    // the image, losing the whole draft.
+    ['dragover', 'drop'].forEach(function (evt) {
+      window.addEventListener(evt, function (e) {
+        if (dropEl.contains(e.target)) return;
+        e.preventDefault();
+      });
+    });
+  }
 })();

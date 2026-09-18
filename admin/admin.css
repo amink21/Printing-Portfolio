@@ -318,3 +318,207 @@ body.admin { background: var(--plane); }
   .abar-in { flex-wrap: wrap; height: auto; padding-top: 12px; padding-bottom: 12px; }
   .toolbar { flex-wrap: wrap; }
 }
+
+/* ============================================================================
+   BULK PHOTOS
+   ============================================================================ */
+
+/* The attribute has to win against every display a component sets, or a panel
+   marked hidden stays on screen. This caught us once already: a .gate set to
+   display:grid ignored [hidden] and covered the whole editor. */
+[hidden] { display: none !important; }
+
+.bulk {
+  margin: 0 0 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-surface);
+  padding: 20px;
+}
+.bulk-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.bulk-head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+.bulk-sub {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: var(--muted);
+  max-width: 64ch;
+  line-height: 1.5;
+}
+.bulk-sub code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  background: var(--sunken);
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+
+.drop {
+  margin-top: 16px;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: var(--radius-surface);
+  background: var(--sunken);
+  padding: 34px 20px;
+  text-align: center;
+  transition: border-color 180ms var(--ease), background-color 180ms var(--ease);
+}
+.drop.over {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--sunken));
+}
+.drop i { font-size: 30px; color: var(--muted); }
+.drop-title {
+  margin: 10px 0 2px;
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.drop-sub { margin: 0; font-size: 13.5px; color: var(--muted); }
+
+.linkbtn {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent-text);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.matches { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.matches:empty { display: none; }
+
+.m {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) minmax(0, 260px) 30px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.m.failed { border-color: #d62828; }
+.m-shot {
+  width: 46px;
+  height: 46px;
+  object-fit: cover;
+  border-radius: 9px;
+  background: var(--sunken);
+}
+.m-info { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.m-file {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.m-score { font-size: 12px; font-weight: 600; }
+.m-score.ok { color: #1f7a45; }
+.m-score.maybe { color: #9a6b00; }
+.m-score.no { color: var(--muted); }
+
+.m-pick {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+.m-rm {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--muted);
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+}
+.m-rm:hover { background: var(--sunken); color: var(--ink); }
+
+.bulk-foot {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bulk-summary { margin: 0; font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.bulk-bar {
+  height: 6px;
+  border-radius: var(--radius-control);
+  background: var(--sunken);
+  overflow: hidden;
+}
+.bulk-bar span {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-radius: inherit;
+  transition: width 220ms var(--ease);
+}
+.bulk-acts { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+@media (max-width: 760px) {
+  .m {
+    grid-template-columns: 46px minmax(0, 1fr) 30px;
+    grid-template-areas: 'shot info rm' 'pick pick pick';
+    row-gap: 8px;
+  }
+  .m-shot { grid-area: shot; }
+  .m-info { grid-area: info; }
+  .m-rm { grid-area: rm; }
+  .m-pick { grid-area: pick; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bulk-bar span { transition: none; }
+}
+
+/* ---- Header, on a narrow screen and in the dark -------------------------------
+   The bar was a fixed-height row of six things, which squashes below about
+   1100px. It wraps now. The three tinted surfaces were also light-theme
+   literals, and this page loads the site stylesheet, so they inverted badly the
+   moment the site gained a dark theme. ------------------------------------------ */
+.abar { background: var(--glass); }
+.abar-in {
+  height: auto;
+  min-height: 62px;
+  flex-wrap: wrap;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.dirty { white-space: nowrap; }
+
+.tag {
+  color: var(--accent-text);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+.dirty {
+  color: color-mix(in srgb, #9a6b00 65%, var(--ink));
+  background: color-mix(in srgb, #f5c518 22%, var(--surface));
+}
+
+@media (max-width: 720px) {
+  .abar-in .btn { flex: 1 1 auto; justify-content: center; }
+  .spacer { flex-basis: 100%; height: 0; }
+}

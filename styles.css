@@ -44,6 +44,16 @@
   --accent: #0866ff;
   --accent-hover: #0a58d6;
   --accent-ink: #ffffff;
+  /* The accent as reading colour rather than as a filled button. On the light
+     ground these are the same; on the dark one the filled blue has to stay dark
+     enough for white to sit on it, so the text version is lifted separately. */
+  --accent-text: #0866ff;
+
+  /* Surfaces that were written as literal greys and now have to flip. */
+  --tile-top: #f8f8fa;
+  --shimmer: #f4f4f6;
+  --scrim: rgba(255, 255, 255, 0.82);
+  --glass: rgba(245, 245, 247, 0.82);
 
   --radius-surface: 16px;
   --radius-control: 999px;
@@ -54,6 +64,75 @@
 
   --shadow-card: 0 1px 2px rgba(20, 20, 30, 0.05), 0 6px 20px rgba(20, 20, 30, 0.05);
   --shadow-lift: 0 2px 6px rgba(20, 20, 30, 0.07), 0 16px 36px rgba(20, 20, 30, 0.1);
+
+  --header-h: 60px;
+}
+
+/* ---- Dark ------------------------------------------------------------------
+   The same family shifted down, never an inversion of the hues. Shadows carry
+   almost nothing on a dark ground, so separation moves onto the borders.
+   ---------------------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --plane: #0b0b0d;
+    --surface: #161619;
+    --sunken: #1e1e22;
+    --line: #2a2a2f;
+    --line-strong: #3c3c44;
+
+    --ink: #f4f4f6;
+    --ink-2: #c2c2cb;
+    --muted: #96969f;
+
+    --accent: #0a6cff;
+    --accent-hover: #2a82ff;
+    --accent-ink: #ffffff;
+    --accent-text: #74a9ff;
+
+    --tile-top: #202024;
+    --shimmer: #26262b;
+    --tint-s: 34%;
+    --tint-l: 22%;
+    --scrim: rgba(22, 22, 25, 0.86);
+    --glass: rgba(11, 11, 13, 0.78);
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-lift: 0 2px 8px rgba(0, 0, 0, 0.55), 0 18px 40px rgba(0, 0, 0, 0.45);
+  }
+}
+
+:root[data-theme='dark'] {
+  --plane: #0b0b0d;
+  --surface: #161619;
+  --sunken: #1e1e22;
+  --line: #2a2a2f;
+  --line-strong: #3c3c44;
+
+  --ink: #f4f4f6;
+  --ink-2: #c2c2cb;
+  --muted: #96969f;
+
+  --accent: #0a6cff;
+  --accent-hover: #2a82ff;
+  --accent-ink: #ffffff;
+  --accent-text: #74a9ff;
+
+  --tile-top: #202024;
+  --shimmer: #26262b;
+  --tint-s: 34%;
+  --tint-l: 22%;
+  --scrim: rgba(22, 22, 25, 0.86);
+  --glass: rgba(11, 11, 13, 0.78);
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-lift: 0 2px 8px rgba(0, 0, 0, 0.55), 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+/* The whole page answers a theme change, rather than each surface snapping
+   on its own at a different moment. */
+body, .topbar, .card, .sheet-inner, .filterbar {
+  transition: background-color 300ms var(--ease), border-color 300ms var(--ease),
+              color 300ms var(--ease);
 }
 
 * { box-sizing: border-box; }
@@ -102,7 +181,7 @@ img { max-width: 100%; display: block; }
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(245, 245, 247, 0.82);
+  background: var(--glass);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--line);
@@ -358,7 +437,14 @@ img { max-width: 100%; display: block; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(238px, 1fr));
   gap: clamp(14px, 1.8vw, 20px);
+  grid-auto-flow: dense;
 }
+
+/* Every seventh tile runs double width with a wider crop. It is the difference
+   between a catalog that looks curated and one that looks like inventory. */
+.card.wide { grid-column: span 2; }
+.card.wide .card-media { aspect-ratio: 16 / 10; }
+.card.wide .card-price { font-size: 19px; }
 
 .card {
   display: flex;
@@ -422,7 +508,7 @@ img { max-width: 100%; display: block; }
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(100deg, var(--sunken) 30%, #f4f4f6 50%, var(--sunken) 70%);
+  background: linear-gradient(100deg, var(--sunken) 30%, var(--shimmer) 50%, var(--sunken) 70%);
   background-size: 220% 100%;
   animation: shimmer 1.3s linear infinite;
 }
@@ -472,8 +558,9 @@ img { max-width: 100%; display: block; }
   display: grid;
   place-items: center;
   background:
-    radial-gradient(130% 100% at 50% 0%, var(--tint, #e8effb) 0%, transparent 70%),
-    linear-gradient(180deg, #f8f8fa 0%, var(--sunken) 100%);
+    radial-gradient(130% 100% at 50% 0%,
+      hsl(var(--h, 218) var(--tint-s, 68%) var(--tint-l, 94%)) 0%, transparent 70%),
+    linear-gradient(180deg, var(--tile-top) 0%, var(--sunken) 100%);
 }
 .ptile-initials {
   font-size: clamp(36px, 7vw, 52px);
@@ -725,3 +812,575 @@ img { max-width: 100%; display: block; }
   .flag { box-shadow: none; }
   .sheet, .sheet[open] { opacity: 1; transform: none; }
 }
+
+/* ============================================================================
+   ADDED LAYER
+   ----------------------------------------------------------------------------
+   Everything below arrived after the first build: the showcase, the stats, the
+   how-it-works block, the quote composer, the saved list, colour swatches and
+   the dark theme's loose ends. Same two-tier radius, same single accent, same
+   rule that motion has to be doing a job.
+   ========================================================================== */
+
+/* ---- Header actions -------------------------------------------------------- */
+.topacts { display: flex; align-items: center; gap: 6px; margin-left: 14px; }
+
+.iconbtn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 200ms var(--ease), color 200ms var(--ease),
+              border-color 200ms var(--ease), transform 200ms var(--ease);
+}
+.iconbtn:hover { background: var(--sunken); color: var(--ink); }
+.iconbtn:active { transform: scale(0.92); }
+.iconbtn.on { color: var(--accent-text); }
+
+/* The count only exists when something is in the list, so it never sits at
+   zero telling you about a feature you have not used. */
+.pill {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: var(--radius-control);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+}
+.pill[hidden] { display: none; }
+.pill.bump { animation: pill-bump 420ms var(--ease); }
+@keyframes pill-bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+
+/* ---- Showcase --------------------------------------------------------------
+   Real catalog pieces, large, advancing on their own. It stops on hover, on
+   focus, when the tab is hidden and when motion is reduced, so it is never
+   moving while someone is trying to read it. -------------------------------- */
+.showcase {
+  margin-top: clamp(30px, 5vw, 54px);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius-surface) + 6px);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.showcase[hidden] { display: none; }
+
+.show-stage {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  padding: 0;
+  background: var(--sunken);
+  cursor: pointer;
+  overflow: hidden;
+}
+.show-stage img,
+.show-stage .ptile {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity 620ms var(--ease), transform 900ms var(--ease);
+}
+.show-stage img.on,
+.show-stage .ptile.on { opacity: 1; transform: none; }
+.show-stage:hover img.on,
+.show-stage:hover .ptile.on { transform: scale(1.02); }
+
+.show-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-top: 1px solid var(--line);
+}
+.show-text { min-width: 0; text-align: left; }
+.show-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.show-price { margin: 2px 0 0; font-size: 13.5px; font-weight: 500; color: var(--muted); }
+
+.show-dots { display: flex; gap: 7px; flex-shrink: 0; }
+.dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--line-strong);
+  cursor: pointer;
+  transition: background-color 240ms var(--ease), width 320ms var(--ease);
+}
+.dot[aria-current='true'] { background: var(--accent); width: 20px; }
+
+/* ---- Stats ------------------------------------------------------------------ */
+.stats { border-block: 1px solid var(--line); background: var(--surface); }
+.stats-inner {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 26px;
+  padding-bottom: 26px;
+}
+.stat { min-width: 0; }
+.stat-n {
+  display: block;
+  font-size: clamp(24px, 3.2vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.stat-l {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* ---- How it works ----------------------------------------------------------- */
+.about { padding: clamp(50px, 7vw, 82px) 0; }
+.about h2 {
+  margin: 0 0 clamp(24px, 3vw, 34px);
+  font-size: clamp(24px, 3.4vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(14px, 2vw, 22px);
+}
+.fact {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-surface);
+  padding: 22px;
+}
+.fact i { font-size: 22px; color: var(--accent-text); }
+.fact h3 {
+  margin: 12px 0 6px;
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.fact p { margin: 0; font-size: 14.5px; color: var(--ink-2); line-height: 1.5; }
+
+/* A generic reveal for blocks outside the grid, driven by the same observer. */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 500ms var(--ease), transform 500ms var(--ease);
+}
+.reveal.in { opacity: 1; transform: none; }
+
+/* ---- Palette ---------------------------------------------------------------- */
+.palette {
+  margin-top: clamp(20px, 3vw, 30px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.sw {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 13px 7px 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.sw i {
+  width: 15px;
+  height: 15px;
+  border-radius: var(--radius-control);
+  background: var(--c);
+  /* A ring, so white on white and black on black both still read as a dot. */
+  box-shadow: inset 0 0 0 1px rgba(128, 128, 140, 0.45);
+}
+
+/* ---- Quote composer --------------------------------------------------------- */
+.quote {
+  margin-top: clamp(22px, 3vw, 30px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  text-align: left;
+}
+.q { min-width: 0; }
+.q.f-2 { grid-column: span 2; }
+.q label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.q .opt { font-weight: 500; opacity: 0.75; }
+.q input,
+.q select {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  transition: border-color 200ms var(--ease);
+}
+.q input::placeholder { color: var(--muted); font-weight: 400; }
+.q input:hover,
+.q select:hover { border-color: var(--line-strong); }
+
+/* The message as it will actually be sent. Nothing is composed behind a button
+   you have to press to find out what it says. */
+.q-preview {
+  grid-column: span 2;
+  background: var(--sunken);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-surface);
+  padding: 16px 18px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  white-space: pre-wrap;
+}
+.q-actions {
+  grid-column: span 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ---- Saved bar --------------------------------------------------------------- */
+.savedbar {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 10px 10px 20px;
+  background: var(--scrim);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-lift);
+  font-size: 14px;
+  font-weight: 600;
+  animation: bar-in 380ms var(--ease) both;
+}
+.savedbar[hidden] { display: none; }
+@keyframes bar-in {
+  from { opacity: 0; transform: translate(-50%, 16px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+.btn.small { height: 36px; padding: 0 16px; font-size: 13.5px; }
+
+/* ---- Heart on a tile ---------------------------------------------------------
+   Sits inside the card button, so it has to stop the click reaching it. ------- */
+.fav {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--scrim);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--ink-2);
+  font-size: 15px;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 220ms var(--ease), transform 220ms var(--ease),
+              color 200ms var(--ease);
+}
+.card:hover .fav,
+.card:focus-within .fav,
+.fav.on { opacity: 1; transform: none; }
+.fav.on { color: #e0245e; }
+.fav:hover { transform: scale(1.12); }
+.fav.pop { animation: fav-pop 420ms var(--ease); }
+@keyframes fav-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+/* A finger has no hover, so on touch the heart is simply always there. */
+@media (hover: none) {
+  .fav { opacity: 1; transform: none; }
+}
+
+/* ---- Pointer tilt ------------------------------------------------------------
+   The tile leans a degree or two towards the pointer and the photo drifts the
+   other way. Both are driven by custom properties written in app.js, which keeps
+   the transform itself in the stylesheet. ------------------------------------ */
+.card.in:hover {
+  transform: perspective(900px) translateY(-4px)
+             rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  box-shadow: var(--shadow-lift);
+}
+.card.in:hover .card-media img,
+.card.in:hover .card-media .ptile {
+  transform: scale(1.06)
+             translate(calc(var(--px, 0) * -7px), calc(var(--py, 0) * -7px));
+}
+
+/* ---- Filter bar, condensed ---------------------------------------------------
+   Once it is stuck under the header it gives back a little height and takes a
+   hairline, so the grid keeps more of the screen. ---------------------------- */
+.filterbar {
+  background: var(--glass);
+  top: var(--header-h);
+  border-bottom: 1px solid transparent;
+  transition: border-color 260ms var(--ease);
+}
+.filterbar-inner {
+  transition: padding 260ms var(--ease);
+}
+.filterbar.stuck { border-bottom-color: var(--line); }
+.filterbar.stuck .filterbar-inner { padding-top: 8px; padding-bottom: 8px; }
+
+/* ---- Colour swatches on a product -------------------------------------------- */
+.sheet-colors { margin-top: 22px; }
+.sheet-colors[hidden] { display: none; }
+.sheet-colors-label {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.sheet-colors-label b { color: var(--ink); font-weight: 700; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.swatch {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--c);
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(128, 128, 140, 0.45);
+  transition: transform 200ms var(--ease), box-shadow 200ms var(--ease);
+}
+.swatch:hover { transform: scale(1.12); }
+.swatch[aria-checked='true'] {
+  box-shadow: inset 0 0 0 1px rgba(128, 128, 140, 0.45),
+              0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+}
+
+.sheet-row { display: flex; gap: 10px; margin-top: 10px; }
+.sheet-row .btn { flex: 1 1 0; }
+
+/* ---- Saved list dialog -------------------------------------------------------- */
+.listsheet { max-width: 520px; }
+.list-inner {
+  position: relative;
+  background: var(--surface);
+  border-radius: var(--radius-surface);
+  padding: clamp(22px, 3vw, 30px);
+  max-height: min(80dvh, 720px);
+  overflow-y: auto;
+}
+.list-inner h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.list-sub { margin: 6px 0 20px; font-size: 14px; color: var(--muted); }
+.list-items { display: flex; flex-direction: column; gap: 10px; }
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-surface);
+}
+.list-shot {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  overflow: hidden;
+  background: var(--sunken);
+}
+.list-shot img { width: 100%; height: 100%; object-fit: cover; }
+.list-shot .ptile-initials { font-size: 17px; }
+.list-shot .ptile-foot { display: none; }
+.list-text { min-width: 0; flex: 1; }
+.list-name {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.list-price { margin: 2px 0 0; font-size: 13px; color: var(--muted); font-weight: 500; }
+.list-rm {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+}
+.list-rm:hover { background: var(--sunken); color: var(--ink); }
+.list-empty { margin: 26px 0; text-align: center; color: var(--muted); font-size: 14.5px; }
+.list-empty[hidden] { display: none; }
+.list-foot { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+.list-foot[hidden] { display: none; }
+.list-total { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+
+/* ---- Toast --------------------------------------------------------------------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 80px;
+  transform: translateX(-50%);
+  z-index: 60;
+  max-width: min(92vw, 420px);
+  padding: 11px 18px;
+  background: var(--ink);
+  color: var(--plane);
+  border-radius: var(--radius-control);
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: var(--shadow-lift);
+  animation: toast-in 300ms var(--ease) both;
+}
+.toast[hidden] { display: none; }
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ---- Mobile ---------------------------------------------------------------------- */
+@media (max-width: 860px) {
+  .about-grid { grid-template-columns: minmax(0, 1fr); }
+  .stats-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 18px; }
+}
+
+@media (max-width: 720px) {
+  .topnav { display: none; }
+  .topacts { margin-left: auto; }
+  .card.wide { grid-column: span 1; }
+  .card.wide .card-media { aspect-ratio: 1 / 1; }
+  .show-stage { aspect-ratio: 4 / 3; }
+  .quote { grid-template-columns: minmax(0, 1fr); }
+  .q.f-2, .q-preview, .q-actions { grid-column: span 1; }
+  .q-actions .btn { width: 100%; }
+  .savedbar { left: 12px; right: 12px; bottom: 12px; transform: none; }
+  @keyframes bar-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: none; }
+  }
+  .toast { bottom: 92px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; }
+  .fav { opacity: 1; transform: none; }
+  .card.in:hover {
+    transform: translateY(-4px);
+  }
+  .card.in:hover .card-media img,
+  .card.in:hover .card-media .ptile { transform: none; }
+  .show-stage img, .show-stage .ptile { transform: none; }
+  .savedbar, .toast { animation: none; }
+  .pill.bump, .fav.pop { animation: none; }
+}
+
+/* ---- The tile is a link now ---------------------------------------------------
+   It used to be a button, which meant it could not be opened in a new tab, could
+   not be copied, and was invisible to a crawler. It is now a real link whose
+   ::after covers the whole tile, with the heart sitting above it as a second,
+   separate control. The click handler turns an ordinary click into the dialog.
+   ------------------------------------------------------------------------------ */
+.card { position: relative; }
+
+a.card-name {
+  color: var(--ink-2);
+  text-decoration: none;
+}
+a.card-name::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+.card:hover a.card-name { color: var(--ink); }
+
+/* The ring belongs around the tile, not around the two words of its name. */
+@supports selector(:has(*)) {
+  .card:has(a.card-name:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  a.card-name:focus-visible { outline: none; }
+}
+
+.listsheet { max-width: min(520px, calc(100vw - 32px)); }
+
+/* Anchors land below the sticky header rather than under it. Without this,
+   "How it works" scrolls its own heading out of sight. */
+section[id], main[id] { scroll-margin-top: calc(var(--header-h) + 12px); }
+
+/* A 16:9 stage across a 1180px page is 660px tall, which is more screen than any
+   single tile deserves. The ratio holds until it hits the cap. */
+.show-stage { max-height: 480px; }

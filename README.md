@@ -111,6 +111,13 @@ Every product currently has an empty `images` list, so the whole site is showing
 placeholders. They are built to look deliberate rather than broken, but they are
 placeholders. The site gets good when the real photos land.
 
+Do not attach them one at a time. See **Photos, the fast way** below: drop the
+whole folder into the editor and let the filenames do the work.
+
+The showcase at the top of the page stays hidden until at least two pieces have
+photos, because a screen-sized placeholder is worse than no showcase at all. It
+appears on its own once they do.
+
 ## Making it update itself
 
 `products.js` is a file you edit. If you would rather edit a spreadsheet and have
@@ -148,15 +155,24 @@ uploading these files as they are.
 ## What is in here
 
 ```
-index.html      the page
-styles.css      all styling, design tokens at the top
-app.js          filtering, search, the detail view
-products.js     YOUR DATA. the only file you need to edit
-fonts/          Manrope, self-hosted so nothing calls out to Google
-images/         put product photos here if you are not using Cloudinary
+index.html          the page
+styles.css          all styling, design tokens at the top
+app.js              filtering, search, the detail view, the saved list
+products.js         YOUR DATA. the only file you need to edit
+vercel.json         the /p/<id> and /sitemap.xml routes, and cache headers
+robots.txt          keeps crawlers out of /admin and /api
+favicon.svg         the tab icon. favicon.ico and apple-touch-icon.png match it
+
+admin/              the editor. index.html, admin.css, admin.js, config.js
+api/save.js         commits products.js to GitHub when you press publish
+api/product.js      renders /p/<id> for link previews and for Google
+api/sitemap.js      builds sitemap.xml from products.js
+
+fonts/              Manrope, self-hosted so nothing calls out to Google
+images/             put product photos here if you are not using Cloudinary
 ```
 
-## Design notes
+## Design notes: the look
 
 Light, calm, and built around the two references: the roominess and type scale of
 an Apple product page, with the card mechanics of Facebook Marketplace. White
@@ -169,8 +185,10 @@ Colour on the buttons and nowhere else is what keeps a catalog calm while the
 photos do the talking.
 
 Categories came from the real catalog rather than from guesswork. Of the
-twenty-eight pieces, seventeen are car key holders, six are desk pieces, and five
-are pop culture, which is why those are the three filters.
+sixty-nine pieces, forty-six are car key holders, eighteen are sculptures and
+paintings, and five are desk pieces, which is why those are the filters that
+appear. A category with nothing in it is never shown, so the filter row can
+never offer a dead end.
 
 The prices and print times in `products.js` are real, taken from what these
 actually sold for in the order sheet. Change any of them freely.
@@ -195,7 +213,90 @@ Anything listed in the last 14 days gets a "Just listed" flag on its tile. It
 appears and disappears by itself as those dates age, so there is nothing to turn
 off later.
 
-## Design notes
+## Photos, the fast way
+
+The editor at `/admin` has **Add photos in bulk**. Drop a whole folder of photos
+on it at once and each one finds its own product by filename:
+
+    lamborghini-urus-1.jpg   ->  Lamborghini Urus Key Holder
+    batmobile 2.png          ->  Batmobile Key holder
+    marshall.jpg             ->  Marshall Key Holder (Custom Built)
+
+Dashes, spaces and capitals all work. A trailing number is read as "which photo",
+not as part of the name, so `supra-1.jpg` and `supra-2.jpg` both land on the
+Supra and stay in that order.
+
+Matching ignores words that appear all over the catalog. "Key" and "holder" are
+in most of the products, so they barely count; "lamborghini" decides it. Each row
+says how sure it is, and anything it cannot place is left on **Skip this photo**
+rather than guessed at. Correct whatever is wrong with the dropdown, then press
+**Upload and attach** once. Four upload at a time.
+
+Nothing is attached until every upload has finished, so the photos end up in
+filename order rather than in whichever order the network happened to return.
+
+## Descriptions
+
+**Suggest descriptions** writes a first draft for every product that has none. It
+never touches one you wrote yourself. They are drafts: read them and fix anything
+that is not true before you publish.
+
+## Colours
+
+`FILAMENT_COLORS` in `products.js` is the list of colours you print in. It shows
+on the home page and on every product as "Available in", and it fills the colour
+dropdown in the custom request form.
+
+If one product only comes in some of them, give that product a `colors` list in
+the editor, for example `Black, Red`. Leave it empty and that product offers
+everything on the list.
+
+## The saved list
+
+A visitor can tap the heart on any piece. A bar appears at the bottom, and **Send
+my list** copies a message naming everything they saved, with prices and any
+colour they picked, ready to paste into a chat. The list lives in their own
+browser and is never sent anywhere on its own.
+
+## The custom request form
+
+The form at the bottom of the page writes the message rather than sending it.
+Whatever is typed appears in the grey box exactly as it will be sent, and the
+button copies it and opens Marketplace. Nothing is hidden behind the button.
+
+## Product pages, link previews and Google
+
+Every piece has a real address: `/p/<id>`.
+
+Pasting one into Messenger used to show a generic card, because the whole catalog
+was a single page. Now `/p/<id>` is rendered by `api/product.js`, which serves the
+same page with that product's title, description, photo and `Product` structured
+data in the head. In the browser it behaves exactly as before: the page notices
+the address and opens that piece.
+
+`/sitemap.xml` is generated from `products.js` by `api/sitemap.js`, so it cannot
+fall out of step with the catalog.
+
+Both come from `products.js` at request time. There is nothing to regenerate and
+nothing to keep in sync.
+
+The old `#<id>` links still work, so anything already sent to a buyer keeps
+working.
+
+## Dark mode
+
+The site follows the system setting, and the moon in the header overrides it. The
+choice is remembered in that browser. The theme is set before the first paint, so
+a dark-mode visitor never gets a white flash.
+
+## Image sizes
+
+Photos uploaded through the editor go to Cloudinary, and the site rewrites those
+URLs to ask for the size it actually needs, in a modern format, with a `srcset` so
+a phone gets a small file and a desktop gets a large one. A photo written as
+`images/whatever.jpg` is left exactly as typed.
+
+## Design notes: the motion
 
 Motion, and what each piece is for:
 
@@ -218,6 +319,3 @@ Motion, and what each piece is for:
 Nothing loops, nothing decorates, and all of it switches off under
 `prefers-reduced-motion`. Most people open this from a Messenger link on a phone,
 where motion that does not earn its place just costs battery.
-#   P r i n t i n g - P o r t f o l i o 
- 
- 

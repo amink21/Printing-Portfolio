@@ -77,6 +77,46 @@ const CATEGORIES = [
   { id: 'custom', label: 'Custom Work' },
 ];
 
+/* ----------------------------------------------------------------------------
+   FILAMENT COLOURS
+   ----------------------------------------------------------------------------
+   The colours you can print in. These show on a product as "Available in", so a
+   buyer knows they are not stuck with whatever colour the photo happens to be.
+
+   Add, remove or rename freely. The hex only draws the little dot, so pick
+   whatever looks closest to the real spool.
+
+   To say one product comes in only some of these, give that product a colors
+   list naming them:  colors: ['Black', 'Red'].  A product with no colors list
+   offers everything below.
+   -------------------------------------------------------------------------- */
+
+const FILAMENT_COLORS = [
+  { name: 'Black', hex: '#1c1c1e' },
+  { name: 'White', hex: '#f2f2f4' },
+  { name: 'Grey', hex: '#8a8a91' },
+  { name: 'Red', hex: '#d62828' },
+  { name: 'Blue', hex: '#1f5fd6' },
+  { name: 'Green', hex: '#1f9d55' },
+  { name: 'Orange', hex: '#f26b21' },
+  { name: 'Yellow', hex: '#f5c518' },
+  { name: 'Purple', hex: '#7b3fe4' },
+  { name: 'Silver', hex: '#b9bcc4' },
+  { name: 'Gold', hex: '#c9a227' },
+];
+
+/* ----------------------------------------------------------------------------
+   FEATURED
+   ----------------------------------------------------------------------------
+   The pieces in the showcase at the top of the page.
+
+   Leave it empty and the site picks for you: photographed pieces first, then the
+   most recently listed. Put ids in it to take control, for example
+   FEATURED = ['porsche-gt3-rs-key-holder', 'batman-layered-sculpture'].
+   -------------------------------------------------------------------------- */
+
+const FEATURED = [];
+
 const PRODUCTS = [
   {
     id: 'lexus-lc500-key-holder-hanger',
@@ -803,3 +843,11 @@ const PRODUCTS = [
    -------------------------------------------------------------------------- */
 
 const SHEET_CSV_URL = '';
+
+/* ----------------------------------------------------------------------------
+   Lets the server read this same file when it renders a product page for a link
+   preview or for Google. In a browser this block does nothing at all.
+   -------------------------------------------------------------------------- */
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { PRODUCTS, CATEGORIES, SELLER, FILAMENT_COLORS, FEATURED };
+}

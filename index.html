@@ -5,13 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Kad Prints - 3D printed car key holders, desk pieces and sculptures</title>
 <meta name="description" content="Car key holders, caliper pencil holders and layered sculptures, printed to order in Montreal. Browse the catalog, then buy through Facebook Marketplace.">
-<meta name="theme-color" content="#f5f5f7">
+<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0b0d" media="(prefers-color-scheme: dark)">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Kad Prints">
 <meta property="og:description" content="Car key holders, desk pieces and sculptures, printed to order in Montreal.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://kadprints.vercel.app/">
 
-<link rel="stylesheet" href="styles.css">
+<!-- Set the theme before the first paint, so a dark-mode visitor never gets a
+     white flash while the stylesheet and script are still loading. -->
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem('kadprints.theme');
+      if (saved === 'dark' || saved === 'light') {
+        document.documentElement.setAttribute('data-theme', saved);
+      }
+    } catch (e) {}
+  })();
+</script>
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css">
 
 <!-- Phosphor icons, loaded without blocking render. The page is readable before
      they arrive and every icon carries a label or aria-label. -->
@@ -28,9 +46,19 @@
     <a class="brand" href="#top"><b>Kad</b><span>Prints</span></a>
     <nav class="topnav" aria-label="Main">
       <a href="#catalog">Catalog</a>
+      <a href="#about">How it works</a>
       <a href="#contact">Custom work</a>
       <a id="navListings" href="https://www.facebook.com/marketplace/" target="_blank" rel="noopener noreferrer">Listings</a>
     </nav>
+    <div class="topacts">
+      <button class="iconbtn" id="savedBtn" type="button" aria-label="Open your saved list">
+        <i class="ph ph-heart" aria-hidden="true"></i>
+        <span class="pill" id="savedCount" hidden>0</span>
+      </button>
+      <button class="iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark">
+        <i class="ph ph-moon" aria-hidden="true"></i>
+      </button>
+    </div>
   </div>
 </header>
 
@@ -51,6 +79,31 @@
         <a class="btn btn-ghost" href="#contact">Ask for something custom</a>
       </div>
     </div>
+
+    <!-- SHOWCASE. Real pieces out of the catalog, not decoration. Advances on
+         its own and stops the moment you hover or focus it. -->
+    <div class="wrap">
+      <div class="showcase rise" id="showcase" style="--d:220ms" hidden>
+        <button class="show-stage" id="showStage" type="button" aria-label="Open this piece"></button>
+        <div class="show-meta">
+          <div class="show-text">
+            <p class="show-name" id="showName"></p>
+            <p class="show-price" id="showPrice"></p>
+          </div>
+          <div class="show-dots" id="showDots" aria-label="Featured pieces"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS. Four facts, counted up once as they scroll into view. -->
+  <section class="stats" aria-label="At a glance">
+    <div class="wrap stats-inner">
+      <div class="stat"><span class="stat-n" id="statPieces">0</span><span class="stat-l">designs in the catalog</span></div>
+      <div class="stat"><span class="stat-n" id="statCats">0</span><span class="stat-l">categories</span></div>
+      <div class="stat"><span class="stat-n" id="statColors">0</span><span class="stat-l">filament colours</span></div>
+      <div class="stat"><span class="stat-n">Montreal</span><span class="stat-l">printed and shipped from</span></div>
+    </div>
   </section>
 
   <!-- CATALOG -->
@@ -62,7 +115,7 @@
       </div>
     </div>
 
-    <div class="filterbar">
+    <div class="filterbar" id="filterbar">
       <div class="wrap filterbar-inner">
         <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
         <div class="search">
@@ -102,18 +155,71 @@
     </div>
   </section>
 
-  <!-- CONTACT. Short on purpose: the buying happens on Marketplace. -->
+  <!-- ABOUT. Three plain facts about how one of these actually gets made. -->
+  <section id="about" class="about">
+    <div class="wrap">
+      <h2>How it works</h2>
+      <div class="about-grid">
+        <div class="fact reveal">
+          <i class="ph ph-cube" aria-hidden="true"></i>
+          <h3>Printed to order</h3>
+          <p>Nothing sits in a box waiting. You pick the piece and the colour, and it goes on the printer that day.</p>
+        </div>
+        <div class="fact reveal">
+          <i class="ph ph-palette" aria-hidden="true"></i>
+          <h3>Your colour</h3>
+          <p>Most pieces come in any of the colours below. Ask for a combination and you will usually get it.</p>
+        </div>
+        <div class="fact reveal">
+          <i class="ph ph-clock" aria-hidden="true"></i>
+          <h3>A day or two</h3>
+          <p>Small pieces print in a few hours, the bigger sculptures overnight. Pickup in Montreal, or shipped.</p>
+        </div>
+      </div>
+      <div class="palette" id="palette" aria-label="Filament colours available"></div>
+    </div>
+  </section>
+
+  <!-- CONTACT. Buying happens on Marketplace, so this writes the message for you
+       instead of pretending to be a checkout. -->
   <section id="contact" class="contact">
     <div class="wrap contact-inner">
       <h2>Want something that is not here?</h2>
       <p>
-        Most of these started as a request. Send the car, the colour and roughly what you
-        want it to do, and you will get a price back.
+        Most of these started as a request. Fill this in and it writes the message
+        for you, ready to paste into Marketplace.
       </p>
-      <a class="btn btn-primary" id="contactCta" href="https://www.facebook.com/marketplace/" target="_blank" rel="noopener noreferrer">
-        <span id="contactCtaLabel">Message on Marketplace</span>
-        <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
-      </a>
+
+      <form class="quote" id="quoteForm">
+        <div class="q f-2">
+          <label for="qWhat">What do you want made</label>
+          <input id="qWhat" placeholder="A key holder for a Mk7 Golf" autocomplete="off">
+        </div>
+        <div class="q">
+          <label for="qColor">Colour</label>
+          <select id="qColor"></select>
+        </div>
+        <div class="q">
+          <label for="qQty">How many</label>
+          <input id="qQty" type="number" min="1" step="1" value="1">
+        </div>
+        <div class="q f-2">
+          <label for="qNotes">Anything else <span class="opt">optional</span></label>
+          <input id="qNotes" placeholder="Rough size, a deadline, a photo you will send" autocomplete="off">
+        </div>
+
+        <div class="q-preview" id="qPreview" aria-live="polite"></div>
+
+        <div class="q-actions">
+          <button class="btn btn-primary" id="qSend" type="submit">
+            <span id="qSendLabel">Copy message and open Marketplace</span>
+            <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
+          </button>
+          <a class="btn btn-ghost" id="contactCta" href="https://www.facebook.com/marketplace/" target="_blank" rel="noopener noreferrer">
+            <span id="contactCtaLabel">Message on Marketplace</span>
+          </a>
+        </div>
+      </form>
     </div>
   </section>
 
@@ -127,6 +233,12 @@
     </a>
   </div>
 </footer>
+
+<!-- SAVED BAR. Only exists once something is saved. -->
+<div class="savedbar" id="savedBar" hidden>
+  <span id="savedBarText">1 piece saved</span>
+  <button class="btn btn-primary small" id="savedBarOpen" type="button">Send my list</button>
+</div>
 
 <!-- PRODUCT DETAIL. Native dialog: focus trapping and Escape come free. -->
 <dialog class="sheet" id="detail" aria-labelledby="detailName">
@@ -145,7 +257,14 @@
       <h3 id="detailName"></h3>
       <p class="sheet-price" id="detailPrice"></p>
       <p class="sheet-desc" id="detailDesc"></p>
+
+      <div class="sheet-colors" id="detailColors" hidden>
+        <p class="sheet-colors-label">Available in <b id="detailColorName"></b></p>
+        <div class="swatches" id="detailSwatches" role="radiogroup" aria-label="Filament colour"></div>
+      </div>
+
       <dl class="sheet-specs" id="detailSpecs"></dl>
+
       <a class="btn btn-primary sheet-cta" id="detailCta" target="_blank" rel="noopener noreferrer">
         View on Marketplace
         <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
@@ -154,12 +273,46 @@
         See my other listings
         <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
       </a>
+
+      <div class="sheet-row">
+        <button class="btn btn-ghost" id="detailSave" type="button">
+          <i class="ph ph-heart" aria-hidden="true"></i> <span id="detailSaveLabel">Save</span>
+        </button>
+        <button class="btn btn-ghost" id="detailShare" type="button">
+          <i class="ph ph-share-network" aria-hidden="true"></i> Share
+        </button>
+      </div>
+
       <p class="sheet-note" id="detailNote"></p>
     </div>
   </div>
 </dialog>
 
-<script src="products.js"></script>
-<script src="app.js"></script>
+<!-- SAVED LIST -->
+<dialog class="sheet listsheet" id="listDialog" aria-labelledby="listTitle">
+  <div class="list-inner">
+    <button class="sheet-close" id="listClose" type="button" aria-label="Close">
+      <i class="ph ph-x" aria-hidden="true"></i>
+    </button>
+    <h3 id="listTitle">Your list</h3>
+    <p class="list-sub">Save the pieces you want, then send them all in one message.</p>
+    <div class="list-items" id="listItems"></div>
+    <p class="list-empty" id="listEmpty" hidden>
+      Nothing saved yet. Tap the heart on any piece and it lands here.
+    </p>
+    <div class="list-foot" id="listFoot" hidden>
+      <span class="list-total" id="listTotal"></span>
+      <button class="btn btn-primary" id="listSend" type="button">
+        <span id="listSendLabel">Copy list and open Marketplace</span>
+      </button>
+      <button class="btn btn-ghost small" id="listClear" type="button">Clear the list</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="/products.js"></script>
+<script src="/app.js"></script>
 </body>
 </html>

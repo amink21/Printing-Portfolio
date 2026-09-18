@@ -6,6 +6,7 @@
 <title>Kad Prints - Admin</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#f5f5f7">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/styles.css">
 <link rel="stylesheet" href="/admin/admin.css">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -33,6 +34,12 @@
       <span class="tag">Editor</span>
       <span class="spacer"></span>
       <span class="dirty" id="dirty" hidden>Unsaved changes</span>
+      <button class="btn btn-ghost" id="bulkBtn" type="button">
+        <i class="ph ph-images" aria-hidden="true"></i> Add photos in bulk
+      </button>
+      <button class="btn btn-ghost" id="describeBtn" type="button">
+        <i class="ph ph-text-aa" aria-hidden="true"></i> Suggest descriptions
+      </button>
       <button class="btn btn-ghost" id="addBtn" type="button">
         <i class="ph ph-plus" aria-hidden="true"></i> Add product
       </button>
@@ -61,6 +68,43 @@
       <p>Drop that file into GitHub, replacing the old <code>products.js</code>, and commit. The site updates itself.</p>
     </div>
   </div>
+
+  <!-- BULK PHOTOS ---------------------------------------------------------
+       Drop the lot in at once. Filenames are matched against product names, you
+       correct whatever it got wrong, and then everything uploads in one go. -->
+  <section class="bulk" id="bulk" hidden>
+    <div class="bulk-head">
+      <div>
+        <h2>Add photos in bulk</h2>
+        <p class="bulk-sub">
+          Name each file after the piece and it will find its own product.
+          <code>porsche-gt3-1.jpg</code>, <code>batman 2.jpg</code>, both work.
+          Check the matches before you upload.
+        </p>
+      </div>
+      <button class="mini" type="button" id="bulkClose">Close</button>
+    </div>
+
+    <div class="drop" id="drop">
+      <i class="ph ph-images" aria-hidden="true"></i>
+      <p class="drop-title">Drop your photos here</p>
+      <p class="drop-sub">
+        or <button type="button" class="linkbtn" id="dropPick">choose files</button>,
+        as many at a time as you like
+      </p>
+    </div>
+
+    <div class="matches" id="matches"></div>
+
+    <div class="bulk-foot" id="bulkFoot" hidden>
+      <p class="bulk-summary" id="bulkSummary"></p>
+      <div class="bulk-bar" id="bulkBar" hidden><span id="bulkFill"></span></div>
+      <div class="bulk-acts">
+        <button class="btn btn-primary" type="button" id="bulkGo">Upload and attach</button>
+        <button class="mini" type="button" id="bulkReset">Start over</button>
+      </div>
+    </div>
+  </section>
 
   <div class="toolbar">
     <div class="search">
