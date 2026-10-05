@@ -147,7 +147,7 @@ const PRODUCTS = [
     price: "",
     listed: '2026-10-03',
     description: "brand new, i make these custom made. ghost busters key holder / key chain",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1791215180/kad-prints/ojqw4yhbgcfzhh6fsvyd.png", "https://res.cloudinary.com/uhuni38t/image/upload/v1791215180/kad-prints/lc8squzz8hjjidyokmnl.jpg"],
     marketplaceUrl: "",
   },
   {
@@ -187,7 +187,7 @@ const PRODUCTS = [
     price: "",
     listed: '2026-10-01',
     description: "brand new corvette c7 version key holder / key hanger. able to do all colours, custom whatever you need for yourself.",
-    images: [],
+    images: ["https://res.cloudinary.com/uhuni38t/image/upload/v1791215179/kad-prints/i4h8kqhaibzdqdg72d0x.jpg"],
     marketplaceUrl: "",
   },
   {
